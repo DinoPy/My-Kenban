@@ -18,6 +18,11 @@ model Example {
     id String @id @default(cuid())
 }
 
+model UserSchema {
+    id       String @id @default(cuid())
+    password String
+}
+
 // Necessary for Next auth
 model Account {
     id                String  @id @default(cuid())
