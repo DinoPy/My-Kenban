@@ -1,10 +1,8 @@
-import logoDark from './images/logo-dark.png';
-import appIcon from './images/app-icon.png';
+import logoDark from './images/logo-dark.jpg';
 
 const assets = {
 	images: {
 		logoDark: logoDark,
-		appIcon: appIcon,
 	},
 	colors: {
 		secondary: '#292929',

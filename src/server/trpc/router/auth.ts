@@ -8,7 +8,7 @@ export const authRouter = t.router({
 		.input(
 			z
 				.object({
-					username: z.string().min(5),
+					name: z.string().min(5),
 					email: z.string().email(),
 					password: z
 						.string()
@@ -25,7 +25,7 @@ export const authRouter = t.router({
 				})
 		)
 		.mutation(async ({ ctx, input }) => {
-			const { username, email, password } = input;
+			const { name, email, password } = input;
 
 			const user = await ctx.prisma.userSchema.findUnique({
 				where: { email: email },
@@ -44,11 +44,11 @@ export const authRouter = t.router({
 				data: {
 					password: passwordHash,
 					email,
-					username,
+					name,
 				},
 				select: {
 					id: true,
-					username: true,
+					name: true,
 					email: true,
 					createdAt: true,
 				},

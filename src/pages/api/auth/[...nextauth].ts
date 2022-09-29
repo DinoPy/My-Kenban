@@ -1,6 +1,8 @@
+import bcrypt from 'bcryptjs';
 import NextAuth, { type NextAuthOptions } from 'next-auth';
 import DiscordProvider from 'next-auth/providers/discord';
 import CredentialsProvider from 'next-auth/providers/credentials';
+import GoogleProvider from 'next-auth/providers/google';
 
 // Prisma adapter for NextAuth, optional and can be removed
 import { PrismaAdapter } from '@next-auth/prisma-adapter';
@@ -10,47 +12,72 @@ import { env } from '../../../env/server.mjs';
 export const authOptions: NextAuthOptions = {
 	// Include user.id on session
 	callbacks: {
-		async jwt({ token, user }) {
-			token.user = user;
+		async jwt({ token, user, account, profile, isNewUser }) {
+			if (user) {
+				token.user = user;
+			}
 			return token;
 		},
-		session({ session, user }) {
-			if (session.user) {
-				session.user.id = user.id;
+		async session({ session, user, token }) {
+			if (token.user) {
+				session.user = token.user as any;
 			}
 			return session;
 		},
 	},
 	// Configure one or more authentication providers
+
 	adapter: PrismaAdapter(prisma),
 	providers: [
 		DiscordProvider({
 			clientId: env.DISCORD_CLIENT_ID,
 			clientSecret: env.DISCORD_CLIENT_SECRET,
 		}),
+		GoogleProvider({
+			clientId: env.GOOGLE_CLIENT_ID,
+			clientSecret: env.GOOGLE_CLIENT_SECRET,
+		}),
 		// ...add more providers here
 		CredentialsProvider({
-			name: 'Credentials',
 			type: 'credentials',
 			credentials: {},
-			authorize: async (credentials) => {
-				console.log('credentials', credentials);
-
+			async authorize(credentials) {
 				const { email, password } = credentials as {
 					email: string;
 					password: string;
 				};
 
-				// login to login
-				// if (email === 'login' && password === 'login') {
-				// 	console.log(email, password);
-				const user = { id: 1, name: 'J Smith', email: 'jsmith@example.com' };
-				return user;
-				// }
-				// return null;
+				const user = await prisma.userSchema.findUnique({
+					where: { email: email },
+				});
+
+				console.log(user);
+
+				if (!user) {
+					throw new Error('Email does not exist');
+				}
+
+				const valid = await bcrypt.compare(password, user.password);
+
+				const toReturnUser = {
+					id: user.id,
+					email: user.email,
+					name: user.name,
+				};
+
+				if (valid) {
+					return toReturnUser;
+				} else {
+					throw new Error('Incorrect password');
+				}
+
+				return null;
 			},
 		}),
 	],
+	session: {
+		strategy: 'jwt',
+	},
 
 	pages: {
 		signIn: '/user/signin',

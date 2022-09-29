@@ -1,9 +1,10 @@
 import { LoadingButton } from '@mui/lab';
-import { Box, TextField } from '@mui/material';
+import { Box, Button, TextField } from '@mui/material';
 import { TRPCClientError } from '@trpc/client';
 import React from 'react';
 import { trpc } from '../../utils/trpc';
 import { useRouter } from 'next/router';
+import AuthLayout from '../../components/layouts/AuthLayout';
 
 const Register = () => {
 	const [loading, setLoading] = React.useState(false);
@@ -28,7 +29,7 @@ const Register = () => {
 
 		const formData = new FormData(event.target as HTMLFormElement);
 
-		const username = formData.get('name') as string;
+		const name = formData.get('name') as string;
 		const email = formData.get('email') as string;
 		const password = formData.get('password') as string;
 		const confirmPassword = formData.get('confirmPassword') as string;
@@ -37,7 +38,7 @@ const Register = () => {
 
 		try {
 			const response = await registerMutation.mutateAsync({
-				username,
+				name,
 				email,
 				password,
 				confirmPassword,
@@ -62,7 +63,7 @@ const Register = () => {
 				if (fieldErrors) {
 					const keys = Object?.keys(e.data?.zodError?.fieldErrors);
 					keys.forEach((key) => {
-						if (key === 'username') {
+						if (key === 'name') {
 							setNameError(fieldErrors[key]);
 						} else if (key === 'email') {
 							setEmailErr(fieldErrors[key]);
@@ -79,13 +80,18 @@ const Register = () => {
 		}
 	};
 	return (
-		<div>
-			<pre> {data} </pre>
+		<AuthLayout>
 			<Box
 				component='form'
 				onSubmit={handleSubmit}
 				noValidate
-				// sx={{ maxWidth: '600px', margin: '2em' }}
+				sx={{
+					display: 'flex',
+					flexDirection: 'column',
+					alignItems: 'center',
+					width: '100%',
+					gap: 1,
+				}}
 			>
 				<TextField
 					id='name'
@@ -150,8 +156,16 @@ const Register = () => {
 				>
 					Register
 				</LoadingButton>
+				<Button
+					onClick={() => {
+						router.push('/user/signin');
+					}}
+				>
+					{' '}
+					Already having an account
+				</Button>
 			</Box>
-		</div>
+		</AuthLayout>
 	);
 };
 

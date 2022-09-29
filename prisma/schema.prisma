@@ -21,7 +21,7 @@ model Example {
 model UserSchema {
     id       String @id @default(cuid())
     email    String @unique
-    username String
+    name     String
     password String
 
     createdAt DateTime @default(now())

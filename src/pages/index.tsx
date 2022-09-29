@@ -1,4 +1,5 @@
 import type { NextPage } from 'next';
+import AppLayout from '../components/layouts/AppLayout';
 import Head from 'next/head';
 import { trpc } from '../utils/trpc';
 import { signIn, signOut, useSession } from 'next-auth/react';
@@ -8,15 +9,13 @@ import '@fontsource/roboto/500.css';
 import '@fontsource/roboto/700.css';
 
 const Home: NextPage = () => {
+	const { data: session, status } = useSession();
 	return (
-		<>
-			<Head>
-				<title>Kenban</title>
-				<meta name='description' content='Kenban t3 stack' />
-				<link rel='icon' href='/favicon.ico' />
-			</Head>
+		<AppLayout>
 			<div>Thing</div>
-		</>
+			<div> {JSON.stringify(session)} </div>
+			<button onClick={(e) => signOut({ redirect: false })}> Sign out</button>
+		</AppLayout>
 	);
 };
 
