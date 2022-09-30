@@ -5,9 +5,13 @@ import { SessionProvider } from 'next-auth/react';
 import type { Session } from 'next-auth';
 import type { AppType } from 'next/app';
 import { trpc } from '../utils/trpc';
+import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
 
 import CssBaseLine from '@mui/material/CssBaseline';
 import { ThemeProvider, createTheme } from '@mui/material/styles';
+
+import { store } from '../redux/store';
+import { Provider } from 'react-redux';
 
 const theme = createTheme({
 	palette: { mode: 'dark' },
@@ -24,12 +28,17 @@ const MyApp: AppType<{ session: Session | null }> = ({
 				<meta name='description' content='Kenban t3 stack' />
 				<link rel='icon' href='/app-icon.png' />
 			</Head>
-			<ThemeProvider theme={theme}>
-				<CssBaseLine />
-				<SessionProvider session={session}>
-					<Component {...pageProps} />
-				</SessionProvider>
-			</ThemeProvider>
+			<Provider store={store}>
+				<ThemeProvider theme={theme}>
+					<CssBaseLine />
+					{/* <Provider store={store}> */}
+					<SessionProvider session={session}>
+						<Component {...pageProps} />
+					</SessionProvider>
+					{/* </Provider> */}
+				</ThemeProvider>
+			</Provider>
+			<ReactQueryDevtools initialIsOpen={false} />
 		</>
 	);
 };

@@ -1,12 +1,11 @@
-import { Box, Container } from '@mui/material';
-import React from 'react';
-import assets from '../../assets/assets';
+import { Box } from '@mui/material';
+import React, { ReactNode } from 'react';
 import Loading from '../common/Loading';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/router';
 import Sidebar from '../common/Sidebar';
 
-const AppLayout = ({ children }: any) => {
+const AppLayout = ({ children }: { children: ReactNode }) => {
 	const router = useRouter();
 	const { data: session, status } = useSession();
 	const [loading, setLoading] = React.useState(!session ? true : false);
@@ -32,8 +31,9 @@ const AppLayout = ({ children }: any) => {
 					p: 1,
 					width: 'max-content',
 				}}
-			></Box>
-			{children}
+			>
+				{children}
+			</Box>
 		</Box>
 	);
 };

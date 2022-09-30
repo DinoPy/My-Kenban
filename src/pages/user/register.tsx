@@ -96,7 +96,7 @@ const Register = () => {
 				<TextField
 					id='name'
 					label='Name'
-					variant='standard'
+					variant='outlined'
 					name='name'
 					error={nameError !== ''}
 					helperText={nameError}
@@ -109,7 +109,7 @@ const Register = () => {
 					id='email'
 					type='email'
 					label='Email'
-					variant='standard'
+					variant='outlined'
 					name='email'
 					error={emailErr !== ''}
 					helperText={emailErr}
@@ -122,7 +122,7 @@ const Register = () => {
 					id='password'
 					type='password'
 					label='Password'
-					variant='standard'
+					variant='outlined'
 					name='password'
 					error={passwordErr !== ''}
 					helperText={passwordErr}
@@ -135,7 +135,7 @@ const Register = () => {
 					id='confirmPassword'
 					type='password'
 					label='Confirm Password'
-					variant='standard'
+					variant='outlined'
 					name='confirmPassword'
 					error={confirmPasswordErr !== ''}
 					helperText={confirmPasswordErr}

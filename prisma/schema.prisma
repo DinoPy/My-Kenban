@@ -14,18 +14,50 @@ datasource db {
     url      = env("DATABASE_URL")
 }
 
-model Example {
-    id String @id @default(cuid())
-}
-
 model UserSchema {
     id       String @id @default(cuid())
     email    String @unique
     name     String
     password String
 
+    createdAt   DateTime @default(now())
+    updatedAt   DateTime @updatedAt
+    BoardSchema Board[]
+}
+
+model Board {
+    id               String  @id @default(cuid())
+    title            String  @default("Untitled")
+    icon             String  @default("⛩")
+    description      String  @default("Add description here /n   You can add multiline description")
+    position         Int     @default(0)
+    favorite         Boolean @default(false)
+    favoritePosition Int     @default(0)
+
     createdAt DateTime @default(now())
     updatedAt DateTime @updatedAt
+
+    userId  String
+    user    UserSchema @relation(fields: [userId], references: [id], onDelete: Cascade)
+    Section Section[]
+}
+
+model Section {
+    id      String @id @default(cuid())
+    title   String @default("")
+    boardId String
+    board   Board  @relation(fields: [boardId], references: [id], onDelete: Cascade)
+    task    Task[]
+}
+
+model Task {
+    id      String @id @default(cuid())
+    title   String @default("")
+    content String @default("")
+    positon Int    @default(0)
+
+    sectionId String
+    section   Section @relation(fields: [sectionId], references: [id], onDelete: Cascade)
 }
 
 // Necessary for Next auth

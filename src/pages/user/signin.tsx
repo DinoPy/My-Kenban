@@ -72,7 +72,7 @@ function SignIn() {
 					id='email'
 					type='email'
 					label='Email'
-					variant='standard'
+					variant='outlined'
 					name='email'
 					error={emailErr !== ''}
 					helperText={emailErr}
@@ -86,7 +86,7 @@ function SignIn() {
 					id='password'
 					type='password'
 					label='Password'
-					variant='standard'
+					variant='outlined'
 					name='password'
 					error={passwordErr !== ''}
 					helperText={passwordErr}
@@ -107,7 +107,10 @@ function SignIn() {
 					Login
 				</LoadingButton>
 				<Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 2 }}>
-					<Button onClick={(e) => signIn('discord', { redirect: false })}>
+					<Button
+						onClick={(e) => signIn('discord', { redirect: false })}
+						variant='outlined'
+					>
 						{' '}
 						<Image
 							src='/discord.svg'
@@ -118,7 +121,11 @@ function SignIn() {
 						/>
 						Signin with Discord
 					</Button>
-					<Button onClick={(e) => signIn('google', { redirect: false })}>
+					<Button
+						onClick={(e) => signIn('google', { redirect: false })}
+						variant='outlined'
+						sx={{ ml: 2 }}
+					>
 						{' '}
 						<Image
 							src='/google.svg'
