@@ -1,10 +1,7 @@
 import React from 'react';
 import type { NextPage } from 'next';
 import AppLayout from '../components/layouts/AppLayout';
-import '@fontsource/roboto/300.css';
-import '@fontsource/roboto/400.css';
-import '@fontsource/roboto/500.css';
-import '@fontsource/roboto/700.css';
+
 import { Box } from '@mui/material';
 import { LoadingButton } from '@mui/lab';
 
@@ -13,6 +10,7 @@ import { setBoards } from '../redux/features/boardSlice';
 import { trpc } from '../utils/trpc';
 import { useSession } from 'next-auth/react';
 import Board from '../components/Board';
+import { setActiveBoard } from '../redux/features/activeBoardSlice';
 
 const Home: NextPage = () => {
 	const dispatch = useAppDispatch();
@@ -22,7 +20,8 @@ const Home: NextPage = () => {
 	const boardMutation = trpc.board.create.useMutation({
 		onSuccess(data) {
 			ctx.board.getAll.invalidate();
-			dispatch(setBoards(data));
+			dispatch(setBoards([data]));
+			dispatch(setActiveBoard(data.id));
 		},
 	});
 
@@ -43,15 +42,15 @@ const Home: NextPage = () => {
 
 	return (
 		<AppLayout>
-			<Box
-				sx={{
-					height: '100%',
-					display: 'flex',
-					alignItems: 'center',
-					justifyContent: 'center',
-				}}
-			>
-				{boards?.length < 1 ? (
+			{boards?.length < 1 ? (
+				<Box
+					sx={{
+						height: '100%',
+						display: 'flex',
+						alignItems: 'center',
+						justifyContent: 'center',
+					}}
+				>
 					<LoadingButton
 						variant='outlined'
 						color='success'
@@ -60,10 +59,10 @@ const Home: NextPage = () => {
 					>
 						Click here to create your first board
 					</LoadingButton>
-				) : (
-					<Board />
-				)}
-			</Box>
+				</Box>
+			) : (
+				<Board />
+			)}
 		</AppLayout>
 	);
 };

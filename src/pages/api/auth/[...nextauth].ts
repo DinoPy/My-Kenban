@@ -51,8 +51,6 @@ export const authOptions: NextAuthOptions = {
 					where: { email: email },
 				});
 
-				console.log(user);
-
 				if (!user) {
 					throw new Error('Email does not exist');
 				}

@@ -5,6 +5,7 @@ import { signIn, signOut, useSession } from 'next-auth/react';
 import { useRouter } from 'next/router';
 import AuthLayout from '../../components/layouts/AuthLayout';
 import Image from 'next/future/image';
+import Link from 'next/link';
 
 function SignIn() {
 	const [loading, setLoading] = React.useState(false);
@@ -137,6 +138,9 @@ function SignIn() {
 						Signin with Google
 					</Button>
 				</Box>
+				<Button sx={{ textAlign: 'center', width: '100%' }}>
+					<Link href='/user/register'> You don&apos;t have an account?</Link>
+				</Button>
 			</Box>
 		</AuthLayout>
 	);

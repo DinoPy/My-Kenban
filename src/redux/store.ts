@@ -1,11 +1,13 @@
 import { configureStore } from '@reduxjs/toolkit';
 import boardReducer from './features/boardSlice';
 import activeBoardReducer from './features/activeBoardSlice';
+import favoritedBoardReducer from './features/favoritedBoardsSlice';
 
 export const store = configureStore({
 	reducer: {
 		board: boardReducer,
 		activeBoard: activeBoardReducer,
+		favoritedBoards: favoritedBoardReducer,
 	},
 });
 

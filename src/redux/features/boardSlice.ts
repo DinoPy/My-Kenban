@@ -1,6 +1,6 @@
 import { createSlice } from '@reduxjs/toolkit';
 
-interface boardInterface {
+export interface boardInterface {
 	value:
 		| {
 				id: string;

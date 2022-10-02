@@ -17,35 +17,43 @@ import assets from '../../assets/assets';
 import LogoutOutlinedIcon from '@mui/icons-material/LogoutOutlined';
 import AddBoxOutlinedIcon from '@mui/icons-material/AddBoxOutlined';
 
-import { DragDropContext, Draggable, Droppable } from 'react-beautiful-dnd';
-import Link from 'next/link';
+import {
+	DragDropContext,
+	Draggable,
+	Droppable,
+	DropResult,
+} from 'react-beautiful-dnd';
+import { setFavoritedBoards } from '../../redux/features/favoritedBoardsSlice';
+import Favorites from './Favorites';
 
 const Sidebar = () => {
 	const { data: session } = useSession();
 	const dispatch = useAppDispatch();
-
 	const sidebarWidth = 250;
+
+	const [sideBarOpen, setSideBarOpen] = React.useState(true);
+
 	const boards = useAppSelector((state) => state.board.value);
 	const activeBoard = useAppSelector((state) => state.activeBoard.value);
-
-	const getBoards = async () => {
-		const { data } = trpc.board.getAll.useQuery({
-			userId: String(session?.user?.id),
-		});
-		dispatch(setBoards(data));
-	};
-	getBoards();
-
+	const favoritedBoards = useAppSelector(
+		(state) => state.favoritedBoards.value
+	);
 	const ctx = trpc.useContext();
+
+	const { refetch } = trpc.board.getAll.useQuery(
+		{ userId: String(session?.user?.id) },
+		{ enabled: false, refetchOnWindowFocus: true }
+	);
+	const boardPositionUpdateMutation = trpc.board.updatePosition.useMutation();
 	const boardMutation = trpc.board.create.useMutation({
 		onSuccess(data) {
 			ctx.board.getAll.invalidate();
-			dispatch(setBoards(data));
+			dispatch(setBoards([data, ...boards]));
 			dispatch(setActiveBoard(data.id));
 		},
 	});
 
-	const createBoard = () => {
+	const createBoard = async () => {
 		try {
 			boardMutation.mutateAsync({
 				userId: String(session?.user?.id),
@@ -55,13 +63,49 @@ const Sidebar = () => {
 		}
 	};
 
-	React.useEffect(() => {
-		if (boards?.length > 0) {
-			dispatch(setActiveBoard(boards[0]?.id));
+	const getBoards = async () => {
+		const { data, isFetched } = await refetch();
+		if (isFetched && data && data?.length > 0) {
+			dispatch(setBoards(data));
+			dispatch(setActiveBoard(data[0]?.id));
+			dispatch(
+				setFavoritedBoards(
+					data
+						.filter((board) => board.favorite)
+						.sort((a, b) => a.favoritePosition - b.favoritePosition)
+				)
+			);
 		}
+	};
+
+	React.useEffect(() => {
+		if (boards.length < 1) {
+			getBoards();
+		}
+
+		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, []);
 
-	const onDragEnd = () => {
+	const onDragEnd = async (result: DropResult) => {
+		const { destination, source } = result;
+		console.log(result);
+
+		if (!destination) {
+			return;
+		}
+
+		const newList = [...boards];
+		const [removed] = newList.splice(source.index, 1);
+		newList.splice(destination!.index, 0, removed!);
+
+		dispatch(setBoards(newList));
+
+		try {
+			await boardPositionUpdateMutation.mutateAsync({ boards: newList });
+		} catch (e) {
+			console.log(e);
+		}
+
 		//
 	};
 
@@ -69,7 +113,9 @@ const Sidebar = () => {
 		<Drawer
 			container={window.document.body}
 			variant='permanent'
-			open={true}
+			open={sideBarOpen}
+			anchor='left'
+			onClose={() => setSideBarOpen(false)}
 			sx={{
 				width: sidebarWidth,
 				height: '100vh',
@@ -105,22 +151,7 @@ const Sidebar = () => {
 					</Box>
 				</ListItem>
 
-				<Box sx={{ pt: '10px' }}>
-					<ListItem>
-						<Box
-							sx={{
-								width: '100%',
-								display: 'flex',
-								justifyContent: 'space-between',
-								alignItems: 'center',
-							}}
-						>
-							<Typography variant='body2' fontWeight={700}>
-								Favorites
-							</Typography>
-						</Box>
-					</ListItem>
-				</Box>
+				<Favorites />
 
 				<Box sx={{ pt: '10px' }}>
 					<ListItem>
@@ -182,6 +213,7 @@ const Sidebar = () => {
 											)}
 										</Draggable>
 									))}
+									{provided.placeholder}
 								</div>
 							)}
 						</Droppable>
