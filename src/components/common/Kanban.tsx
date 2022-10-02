@@ -41,6 +41,7 @@ const Kanban = (props: SectionInterface) => {
 	const [sections, setSections] = React.useState<SectionInterface['sections']>(
 		props.sections
 	);
+	const [selectedTask, setSelectedTask] = React.useState(undefined);
 	const activeBoard = useAppSelector((state) => state.activeBoard.value);
 
 	const addSectionMutation = trpc.section.create.useMutation();
