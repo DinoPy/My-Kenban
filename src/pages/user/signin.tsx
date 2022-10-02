@@ -42,7 +42,6 @@ function SignIn() {
 			password: password,
 			redirect: false,
 		});
-		console.log(res);
 
 		switch (res?.ok) {
 			case true: {
@@ -67,7 +66,6 @@ function SignIn() {
 				component='form'
 				onSubmit={(event) => handleSignIn(event)}
 				noValidate
-				// sx={{ maxWidth: '600px', margin: '2em' }}
 			>
 				<TextField
 					id='email'
@@ -109,7 +107,7 @@ function SignIn() {
 				</LoadingButton>
 				<Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 2 }}>
 					<Button
-						onClick={(e) => signIn('discord', { redirect: false })}
+						onClick={() => signIn('discord', { redirect: false })}
 						variant='outlined'
 					>
 						{' '}
@@ -123,7 +121,7 @@ function SignIn() {
 						Signin with Discord
 					</Button>
 					<Button
-						onClick={(e) => signIn('google', { redirect: false })}
+						onClick={() => signIn('google', { redirect: false })}
 						variant='outlined'
 						sx={{ ml: 2 }}
 					>
