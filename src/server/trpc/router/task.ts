@@ -1,5 +1,5 @@
 import { TRPCError } from '@trpc/server';
-import { number, z } from 'zod';
+import { z } from 'zod';
 import { t } from '../trpc';
 
 export const taskRouter = t.router({
@@ -26,6 +26,7 @@ export const taskRouter = t.router({
 						title: true,
 						position: true,
 						content: true,
+						createdAt: true,
 					},
 				});
 				return newTask;
@@ -62,6 +63,7 @@ export const taskRouter = t.router({
 						title: true,
 						position: true,
 						content: true,
+						createdAt: true,
 					},
 				});
 				return task;
@@ -97,6 +99,7 @@ export const taskRouter = t.router({
 						data: { position: index },
 					});
 				});
+				return { message: 'Task deleted successfully' };
 			} catch (e) {
 				console.log(e);
 				throw new TRPCError({

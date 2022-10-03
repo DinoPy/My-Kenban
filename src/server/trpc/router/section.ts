@@ -11,6 +11,7 @@ const sectionReturn = {
 			title: true,
 			content: true,
 			position: true,
+			createdAt: true,
 		},
 	},
 };

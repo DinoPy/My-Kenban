@@ -18,6 +18,7 @@ import {
 	DropResult,
 } from 'react-beautiful-dnd';
 import { trpc } from '../../utils/trpc';
+import TaskModal from './TaskModal';
 
 let timer: NodeJS.Timeout;
 const cooldown = 500;
@@ -32,16 +33,29 @@ export interface SectionInterface {
 					title: string;
 					content: string;
 					position: number;
+					createdAt: Date;
 				}[];
 		  }[]
 		| [];
+}
+
+export interface TaskInterface {
+	id: string;
+	title: string;
+	content: string;
+	position: number;
+	createdAt: Date;
+	sectionId?: string;
 }
 
 const Kanban = (props: SectionInterface) => {
 	const [sections, setSections] = React.useState<SectionInterface['sections']>(
 		props.sections
 	);
-	const [selectedTask, setSelectedTask] = React.useState(undefined);
+	const [selectedTask, setSelectedTask] = React.useState<
+		TaskInterface | undefined
+	>(undefined);
+
 	const activeBoard = useAppSelector((state) => state.activeBoard.value);
 
 	const addSectionMutation = trpc.section.create.useMutation();
@@ -185,6 +199,37 @@ const Kanban = (props: SectionInterface) => {
 		}
 	};
 
+	const taskUpdateHandler = async (task: TaskInterface) => {
+		const newData = [...sections];
+		const sectionIndex = newData.findIndex((s) => s.id === task.sectionId);
+		const taskIndex = newData[sectionIndex]?.task.findIndex(
+			(t) => t.id === task.id
+		);
+		if (
+			newData !== undefined &&
+			sectionIndex !== undefined &&
+			newData[sectionIndex] !== undefined &&
+			taskIndex !== undefined
+		) {
+			newData[sectionIndex].task[taskIndex] = task;
+		}
+		setSections(newData);
+		// to do task update
+	};
+
+	const taskDeleteHandler = async (task: TaskInterface) => {
+		///
+		const newData = [...sections];
+		const sectionIndex = newData.findIndex((s) => s.id === task.sectionId);
+		const taskIndex = newData[sectionIndex]?.task.findIndex(
+			(t) => t.id === task.id
+		);
+		if (sectionIndex !== undefined && taskIndex !== undefined) {
+			newData[sectionIndex].task.splice(parseInt(taskIndex), 1);
+		}
+		setSections(newData);
+	};
+
 	return (
 		<>
 			<Box
@@ -282,6 +327,12 @@ const Kanban = (props: SectionInterface) => {
 																? 'grab'
 																: 'pointer!important',
 														}}
+														onClick={() =>
+															setSelectedTask({
+																...task,
+																sectionId: section.id,
+															})
+														}
 													>
 														<Typography>
 															{task.title === '' ? 'Untitled' : task.title}
@@ -298,6 +349,13 @@ const Kanban = (props: SectionInterface) => {
 					))}
 				</Box>
 			</DragDropContext>
+			<TaskModal
+				task={selectedTask}
+				boardId={activeBoard}
+				onClose={() => setSelectedTask(undefined)}
+				onUpdate={taskUpdateHandler}
+				onDelete={taskDeleteHandler}
+			/>
 		</>
 	);
 };
