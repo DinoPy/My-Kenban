@@ -45,7 +45,6 @@ export const taskRouter = t.router({
 				id: z.string(),
 				title: z.string(),
 				content: z.string(),
-				position: z.number(),
 			})
 		)
 		.mutation(async ({ ctx, input }) => {

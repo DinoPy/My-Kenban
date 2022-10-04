@@ -11,12 +11,11 @@ import {
 } from '@mui/material';
 import React, { useEffect } from 'react';
 import Moment from 'moment';
-
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-import { CKEditor } from '@ckeditor/ckeditor5-react';
-import ClassicEditor from '@ckeditor/ckeditor5-build-classic';
 import { TaskInterface } from './Kanban';
 import { trpc } from '../../utils/trpc';
+import dynamic from 'next/dynamic';
+
+const CKEditor = dynamic(() => import('./CKEditor'), { ssr: false });
 
 export interface TaskModalInterface {
 	task: TaskInterface | undefined;
@@ -40,9 +39,13 @@ const modalStyle = {
 	height: '80%',
 };
 
+let timer: NodeJS.Timeout;
+const timeout = 500;
+
 const TaskModal = (props: TaskModalInterface) => {
 	const boardId = props.boardId;
 	const taskDeleteMutation = trpc.task.delete.useMutation();
+	const taskUpdateMutation = trpc.task.update.useMutation();
 
 	const [task, setTask] = React.useState<TaskInterface | undefined>(props.task);
 	const [isDeleting, setIsDeleting] = React.useState(false);
@@ -59,7 +62,7 @@ const TaskModal = (props: TaskModalInterface) => {
 
 	const onClose = () => {
 		if (task !== undefined) {
-			props.onUpdate(task);
+			props.onUpdate({ ...task, title, content });
 		}
 		props.onClose();
 	};
@@ -82,6 +85,45 @@ const TaskModal = (props: TaskModalInterface) => {
 		}
 	};
 
+	const onUpdateTitle = async (
+		e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+	) => {
+		clearTimeout(timer);
+		const { value } = e.target;
+		setTitle(value);
+
+		if (task !== undefined) {
+			timer = setTimeout(async () => {
+				await taskUpdateMutation.mutateAsync({
+					id: task?.id,
+					title: value,
+					content: content,
+				});
+			}, timeout);
+			props.onUpdate({ ...task, title: value });
+			console.log(task);
+		}
+	};
+
+	const onUpdateContent = async (e: any, editor: any) => {
+		clearTimeout(timer);
+		const data = editor.getData();
+		setContent(data);
+
+		if (task !== undefined) {
+			timer = setTimeout(async () => {
+				await taskUpdateMutation.mutateAsync({
+					id: task?.id,
+					title: title,
+					content: data,
+				});
+			}, timeout);
+
+			props.onUpdate({ ...task, content: data });
+			console.log(task);
+		}
+	};
+
 	return (
 		<Modal
 			open={task !== undefined}
@@ -96,7 +138,7 @@ const TaskModal = (props: TaskModalInterface) => {
 						sx={{
 							display: 'flex',
 							alignItems: 'center',
-							justifyContent: 'flex-start',
+							justifyContent: 'flex-end',
 							width: '100%',
 						}}
 					>
@@ -119,7 +161,7 @@ const TaskModal = (props: TaskModalInterface) => {
 					>
 						<TextField
 							value={title}
-							onChange={(e) => setTitle(e.target.value)}
+							onChange={(e) => onUpdateTitle(e)}
 							placeholder='Untitled'
 							variant='outlined'
 							sx={{
@@ -144,7 +186,7 @@ const TaskModal = (props: TaskModalInterface) => {
 						<Box
 							sx={{ height: '80%', overflowX: 'hidden', overflowY: 'hidden' }}
 						>
-							<CKEditor editor={ClassicEditor} data={content} />
+							<CKEditor content={content} onUpdateContent={onUpdateContent} />
 						</Box>
 					</Box>
 				</Box>

@@ -200,21 +200,17 @@ const Kanban = (props: SectionInterface) => {
 	};
 
 	const taskUpdateHandler = async (task: TaskInterface) => {
+		const { sectionId, ...rest } = task;
 		const newData = [...sections];
-		const sectionIndex = newData.findIndex((s) => s.id === task.sectionId);
+		const sectionIndex = newData.findIndex((s) => s.id === sectionId);
 		const taskIndex = newData[sectionIndex]?.task.findIndex(
 			(t) => t.id === task.id
 		);
-		if (
-			newData !== undefined &&
-			sectionIndex !== undefined &&
-			newData[sectionIndex] !== undefined &&
-			taskIndex !== undefined
-		) {
-			newData[sectionIndex].task[taskIndex] = task;
+		if (taskIndex !== undefined && sectionIndex !== undefined) {
+			// eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+			newData.at(sectionIndex)!.task[taskIndex] = rest;
 		}
 		setSections(newData);
-		// to do task update
 	};
 
 	const taskDeleteHandler = async (task: TaskInterface) => {
@@ -224,8 +220,10 @@ const Kanban = (props: SectionInterface) => {
 		const taskIndex = newData[sectionIndex]?.task.findIndex(
 			(t) => t.id === task.id
 		);
+		if (!newData) return;
 		if (sectionIndex !== undefined && taskIndex !== undefined) {
-			newData[sectionIndex].task.splice(parseInt(taskIndex), 1);
+			// eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+			newData[sectionIndex]!.task.splice(taskIndex, 1);
 		}
 		setSections(newData);
 	};
@@ -349,13 +347,15 @@ const Kanban = (props: SectionInterface) => {
 					))}
 				</Box>
 			</DragDropContext>
-			<TaskModal
-				task={selectedTask}
-				boardId={activeBoard}
-				onClose={() => setSelectedTask(undefined)}
-				onUpdate={taskUpdateHandler}
-				onDelete={taskDeleteHandler}
-			/>
+			{selectedTask && (
+				<TaskModal
+					task={selectedTask}
+					boardId={activeBoard}
+					onClose={() => setSelectedTask(undefined)}
+					onUpdate={taskUpdateHandler}
+					onDelete={taskDeleteHandler}
+				/>
+			)}
 		</>
 	);
 };
