@@ -15,7 +15,7 @@ import { TaskInterface } from './Kanban';
 import { trpc } from '../../utils/trpc';
 import dynamic from 'next/dynamic';
 
-// const CKEditor = dynamic(() => import('./CKEditor'), { ssr: false });
+const CKEditor = dynamic(() => import('./CKEditor'), { ssr: false });
 
 export interface TaskModalInterface {
 	task: TaskInterface | undefined;
@@ -186,7 +186,7 @@ const TaskModal = (props: TaskModalInterface) => {
 						<Box
 							sx={{ height: '80%', overflowX: 'hidden', overflowY: 'hidden' }}
 						>
-							{/* <CKEditor content={content} onUpdateContent={onUpdateContent} /> */}
+							<CKEditor content={content} onUpdateContent={onUpdateContent} />
 						</Box>
 					</Box>
 				</Box>
