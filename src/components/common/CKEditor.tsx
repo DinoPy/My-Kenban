@@ -8,7 +8,7 @@ const CKEdit = ({
 	onUpdateContent,
 }: {
 	content: string;
-	onUpdateContent: (e: any, editor: any) => Promise<void>;
+	onUpdateContent: (e: any, editor: any) => void;
 }) => {
 	return (
 		<CKEditor

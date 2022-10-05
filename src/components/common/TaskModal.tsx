@@ -110,17 +110,21 @@ const TaskModal = (props: TaskModalInterface) => {
 		const data = editor.getData();
 		setContent(data);
 
-		if (task !== undefined) {
-			timer = setTimeout(async () => {
-				await taskUpdateMutation.mutateAsync({
-					id: task?.id,
-					title: title,
-					content: data,
-				});
-			}, timeout);
+		try {
+			if (task !== undefined) {
+				timer = setTimeout(async () => {
+					await taskUpdateMutation.mutateAsync({
+						id: task?.id,
+						title: title,
+						content: data,
+					});
+				}, timeout);
 
-			props.onUpdate({ ...task, content: data });
-			console.log(task);
+				props.onUpdate({ ...task, content: data });
+				console.log(task);
+			}
+		} catch (e) {
+			console.log(e);
 		}
 	};
 

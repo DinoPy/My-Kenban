@@ -1,6 +1,7 @@
 // src/pages/_app.tsx
 import Head from 'next/head';
 import '../styles/globals.css';
+import '../css/custom-ckeditor.css';
 import { SessionProvider } from 'next-auth/react';
 import type { Session } from 'next-auth';
 import type { AppType } from 'next/app';
