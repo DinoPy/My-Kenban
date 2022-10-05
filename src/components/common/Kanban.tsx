@@ -202,15 +202,20 @@ const Kanban = (props: SectionInterface) => {
 	const taskUpdateHandler = async (task: TaskInterface) => {
 		const { sectionId, ...rest } = task;
 		const newData = [...sections];
-		const sectionIndex = newData.findIndex((s) => s.id === sectionId);
-		const taskIndex = newData[sectionIndex]?.task.findIndex(
-			(t) => t.id === task.id
-		);
-		if (taskIndex !== undefined && sectionIndex !== undefined) {
-			// eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-			newData.at(sectionIndex)!.task[taskIndex] = rest;
+		// crazy checking due to compiled version crashing on undefined section in the find index
+		if (sectionId && newData !== undefined) {
+			const sectionIndex = newData.findIndex(
+				(section) => section.id === sectionId
+			);
+			const taskIndex = newData[sectionIndex]?.task.findIndex(
+				(t) => t.id === task.id
+			);
+			if (taskIndex !== undefined && sectionIndex !== undefined) {
+				// eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+				newData.at(sectionIndex)!.task[taskIndex] = rest;
+			}
+			setSections(newData);
 		}
-		setSections(newData);
 	};
 
 	const taskDeleteHandler = async (task: TaskInterface) => {

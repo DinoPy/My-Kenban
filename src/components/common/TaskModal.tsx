@@ -101,7 +101,6 @@ const TaskModal = (props: TaskModalInterface) => {
 				});
 			}, timeout);
 			props.onUpdate({ ...task, title: value });
-			console.log(task);
 		}
 	};
 
@@ -120,8 +119,8 @@ const TaskModal = (props: TaskModalInterface) => {
 					});
 				}, timeout);
 
-				props.onUpdate({ ...task, content: data });
 				console.log(task);
+				props.onUpdate({ ...task, content: data });
 			}
 		} catch (e) {
 			console.log(e);
