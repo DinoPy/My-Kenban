@@ -1,4 +1,4 @@
-// import React from 'react';
+import React from 'react';
 
 // import { CKEditor } from '@ckeditor/ckeditor5-react';
 // import ClassicEditor from '@ckeditor/ckeditor5-build-classic';
@@ -19,4 +19,8 @@
 // 	);
 // };
 
-// export default CKEdit;
+const CKEdit = () => {
+	return <div> CKEditor </div>;
+};
+
+export default CKEdit;
