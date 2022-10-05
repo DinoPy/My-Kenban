@@ -219,18 +219,20 @@ const Kanban = (props: SectionInterface) => {
 	};
 
 	const taskDeleteHandler = async (task: TaskInterface) => {
-		///
+		const { sectionId, ...rest } = task;
 		const newData = [...sections];
-		const sectionIndex = newData.findIndex((s) => s.id === task.sectionId);
-		const taskIndex = newData[sectionIndex]?.task.findIndex(
-			(t) => t.id === task.id
-		);
-		if (!newData) return;
-		if (sectionIndex !== undefined && taskIndex !== undefined) {
-			// eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-			newData[sectionIndex]!.task.splice(taskIndex, 1);
+		if (sectionId && newData !== undefined) {
+			const sectionIndex = newData.findIndex((s) => s.id === sectionId);
+			const taskIndex = newData[sectionIndex]?.task.findIndex(
+				(t) => t.id === rest.id
+			);
+			if (!newData) return;
+			if (sectionIndex !== undefined && taskIndex !== undefined) {
+				// eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+				newData[sectionIndex]!.task.splice(taskIndex, 1);
+			}
+			setSections(newData);
 		}
-		setSections(newData);
 	};
 
 	return (
