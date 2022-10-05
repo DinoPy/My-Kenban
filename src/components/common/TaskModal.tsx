@@ -186,7 +186,7 @@ const TaskModal = (props: TaskModalInterface) => {
 						<Box
 							sx={{ height: '80%', overflowX: 'hidden', overflowY: 'hidden' }}
 						>
-							<CKEditor content={content} onUpdateContent={onUpdateContent} />
+							{/* <CKEditor content={content} onUpdateContent={onUpdateContent} /> */}
 						</Box>
 					</Box>
 				</Box>

@@ -64,7 +64,9 @@ function SignIn() {
 		<AuthLayout>
 			<Box
 				component='form'
-				onSubmit={(event) => handleSignIn(event)}
+				onSubmit={(event: React.FormEvent<HTMLFormElement>) =>
+					handleSignIn(event)
+				}
 				noValidate
 			>
 				<TextField
