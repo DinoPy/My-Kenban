@@ -276,7 +276,13 @@ const Board = () => {
 					/>
 				</Box>
 
-				<Box>
+				<Box
+					sx={(theme) => ({
+						[theme.breakpoints.down('sm')]: {
+							fontSize: '12px',
+						},
+					})}
+				>
 					<Kenban sections={sections} />
 				</Box>
 			</Box>

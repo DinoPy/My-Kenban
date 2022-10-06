@@ -250,14 +250,17 @@ const Kanban = (props: SectionInterface) => {
 					{sections.length} sections
 				</Typography>
 			</Box>
-			<Divider sx={{ marign: '10px 0' }} />
+			<Divider sx={{ margin: '10px 0' }} />
 			<DragDropContext onDragEnd={onDragEnd}>
 				<Box
 					sx={{
 						display: 'flex',
 						overflowX: 'auto',
 						alignItems: 'flex-start',
-						width: 'calc(100vw - 400px)',
+						width:
+							window.innerWidth < 600
+								? window.innerWidth
+								: 'calc(100vw - 400px)',
 					}}
 				>
 					{sections.map((section) => (

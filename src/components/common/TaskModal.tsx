@@ -187,7 +187,11 @@ const TaskModal = (props: TaskModalInterface) => {
 						</Typography>
 						<Divider sx={{ my: 5 }} />
 						<Box
-							sx={{ height: '80%', overflowX: 'hidden', overflowY: 'hidden' }}
+							sx={{
+								height: '80%',
+								overflowX: 'hidden',
+								overflowY: 'hidden',
+							}}
 						>
 							<CKEditor content={content} onUpdateContent={onUpdateContent} />
 						</Box>
