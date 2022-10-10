@@ -5,15 +5,54 @@ import CredentialsProvider from 'next-auth/providers/credentials';
 import GoogleProvider from 'next-auth/providers/google';
 
 // Prisma adapter for NextAuth, optional and can be removed
-import { PrismaAdapter } from '@next-auth/prisma-adapter';
+// import { PrismaAdapter } from '@next-auth/prisma-adapter';
 import { prisma } from '../../../server/db/client';
 import { env } from '../../../env/server.mjs';
 
 export const authOptions: NextAuthOptions = {
 	// Include user.id on session
 	callbacks: {
-		async jwt({ token, user, account, profile, isNewUser }) {
-			if (user) {
+		async signIn({ user }) {
+			try {
+				if (!user) return false;
+				const foundUser = await prisma.userSchema.findFirst({
+					where: {
+						email: String(user?.email),
+					},
+				});
+
+				if (!foundUser) {
+					await prisma.userSchema.create({
+						data: {
+							email: String(user?.email),
+							name: String(user?.email),
+							password: String(user?.id),
+						},
+					});
+				}
+			} catch (e) {
+				console.log(e);
+				// return false;
+			}
+
+			return true;
+		},
+		async jwt({ token, user }) {
+			console.log(token.email);
+			const foundUser = await prisma.userSchema.findFirst({
+				where: {
+					email: String(token?.email),
+				},
+				select: {
+					id: true,
+					email: true,
+					name: true,
+				},
+			});
+
+			if (foundUser) {
+				token.user = foundUser;
+			} else {
 				token.user = user;
 			}
 			return token;
@@ -27,12 +66,12 @@ export const authOptions: NextAuthOptions = {
 	},
 	// Configure one or more authentication providers
 
-	adapter: PrismaAdapter(prisma),
+	// adapter: PrismaAdapter(prisma),
 	providers: [
-		DiscordProvider({
-			clientId: env.DISCORD_CLIENT_ID,
-			clientSecret: env.DISCORD_CLIENT_SECRET,
-		}),
+		// DiscordProvider({
+		// 	clientId: env.DISCORD_CLIENT_ID,
+		// 	clientSecret: env.DISCORD_CLIENT_SECRET,
+		// }),
 		GoogleProvider({
 			clientId: env.GOOGLE_CLIENT_ID,
 			clientSecret: env.GOOGLE_CLIENT_SECRET,
@@ -67,10 +106,14 @@ export const authOptions: NextAuthOptions = {
 					if (valid) {
 						return toReturnUser;
 					} else {
-						throw new Error('Incorrect password');
+						console.log('here');
+						throw new Error(
+							'Incorrect password OR this email was registred with google'
+						);
 					}
 				} catch (e) {
 					console.log(e);
+					throw new Error((e as Error).message);
 				}
 
 				return null;

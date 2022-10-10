@@ -17,10 +17,10 @@ datasource db {
 }
 
 model UserSchema {
-    id       String @id @default(cuid())
-    email    String @unique
+    id       String  @id @default(cuid())
+    email    String  @unique
     name     String
-    password String
+    password String?
 
     createdAt   DateTime @default(now())
     updatedAt   DateTime @updatedAt
@@ -58,7 +58,7 @@ model Section {
 model Task {
     id       String @id @default(cuid())
     title    String @default("")
-    content  String @default("")
+    content  String @default("") @db.Text
     position Int    @default(0)
 
     sectionId String

@@ -21,7 +21,12 @@ import { store } from '../redux/store';
 import { Provider } from 'react-redux';
 
 const theme = createTheme({
-	palette: { mode: 'dark' },
+	palette: {
+		mode: 'dark',
+		// background: {
+		// 	paper: '#1e1e1e',
+		// },
+	},
 });
 
 const MyApp: AppType<{ session: Session | null }> = ({
@@ -33,16 +38,15 @@ const MyApp: AppType<{ session: Session | null }> = ({
 			<Head>
 				<title>Kenban</title>
 				<meta name='description' content='Kenban t3 stack' />
+				<meta name='viewport' content='width=device-width, initial-scale=1' />
 				<link rel='icon' href='/app-icon.png' />
 			</Head>
 			<Provider store={store}>
 				<ThemeProvider theme={theme}>
 					<CssBaseLine />
-					{/* <Provider store={store}> */}
 					<SessionProvider session={session}>
 						<Component {...pageProps} />
 					</SessionProvider>
-					{/* </Provider> */}
 				</ThemeProvider>
 			</Provider>
 			<ReactQueryDevtools initialIsOpen={false} />

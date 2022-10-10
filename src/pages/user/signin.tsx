@@ -50,6 +50,7 @@ function SignIn() {
 				break;
 			}
 			case false: {
+				console.log(res);
 				if (res?.error?.includes('Email does not exist')) {
 					setEmailErr('Email does not exist');
 				} else if (res?.error?.includes('Incorrect password')) {
@@ -107,8 +108,8 @@ function SignIn() {
 				>
 					Login
 				</LoadingButton>
-				<Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 2 }}>
-					<Button
+				<Box sx={{ display: 'flex', justifyContent: 'center', my: 2 }}>
+					{/* <Button
 						onClick={() => signIn('discord', { redirect: false })}
 						variant='outlined'
 					>
@@ -121,7 +122,7 @@ function SignIn() {
 							style={{ marginRight: '0.5em' }}
 						/>
 						Signin with Discord
-					</Button>
+					</Button> */}
 					<Button
 						onClick={() => signIn('google', { redirect: false })}
 						variant='outlined'

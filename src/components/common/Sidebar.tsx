@@ -116,8 +116,8 @@ const Sidebar = () => {
 			{' '}
 			{window.innerWidth < 600 && (
 				<IconButton
-					sx={{ position: 'absolute', bottom: '5px', right: '5px' }}
 					onClick={() => setSideBarOpen(true)}
+					sx={{ position: 'absolute', bottom: '5px', right: '5px' }}
 				>
 					<MenuIcon />
 				</IconButton>
@@ -125,14 +125,13 @@ const Sidebar = () => {
 			<SwipeableDrawer
 				container={window.document.body}
 				open={sideBarOpen}
-				variant={window.innerWidth < 600 ? 'temporary' : 'permanent'}
+				variant={window.innerWidth < 1000 ? 'temporary' : 'permanent'}
 				onOpen={() => setSideBarOpen(true)}
-				anchor='left'
+				anchor={window.innerWidth < 1000 ? 'right' : 'left'}
 				onClose={() => setSideBarOpen(false)}
 				sx={{
 					width: sidebarWidth,
-					minHeight: '100vh',
-					border: '1px solid yellow',
+					height: '100vh',
 					'& > div': {
 						borderRight: 'none',
 					},
@@ -143,7 +142,7 @@ const Sidebar = () => {
 					sx={{
 						width: sidebarWidth,
 						height: '100%',
-						backgroundColor: assets.colors.secondary,
+						backgroundColor: 'grey.900',
 					}}
 				>
 					<ListItem>
