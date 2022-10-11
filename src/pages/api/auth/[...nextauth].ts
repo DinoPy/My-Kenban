@@ -95,7 +95,10 @@ export const authOptions: NextAuthOptions = {
 						throw new Error('Email does not exist');
 					}
 
-					const valid = await bcrypt.compare(password, user.password);
+					const valid = await bcrypt.compare(
+						password,
+						(user as { password: string }).password
+					);
 
 					const toReturnUser = {
 						id: user.id,
