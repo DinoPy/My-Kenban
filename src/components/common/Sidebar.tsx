@@ -6,15 +6,13 @@ import { setActiveBoard } from '../../redux/features/activeBoardSlice';
 import { useAppDispatch, useAppSelector } from '../../redux/hooks';
 import {
 	Box,
-	Drawer,
 	IconButton,
 	List,
 	ListItem,
 	ListItemButton,
-	SwipeableDrawer,
+	Drawer,
 	Typography,
 } from '@mui/material';
-import assets from '../../assets/assets';
 import LogoutOutlinedIcon from '@mui/icons-material/LogoutOutlined';
 import AddBoxOutlinedIcon from '@mui/icons-material/AddBoxOutlined';
 import MenuIcon from '@mui/icons-material/Menu';
@@ -37,9 +35,7 @@ const Sidebar = () => {
 
 	const boards = useAppSelector((state) => state.board.value);
 	const activeBoard = useAppSelector((state) => state.activeBoard.value);
-	const favoritedBoards = useAppSelector(
-		(state) => state.favoritedBoards.value
-	);
+
 	const ctx = trpc.useContext();
 
 	const { refetch } = trpc.board.getAll.useQuery(
@@ -111,10 +107,37 @@ const Sidebar = () => {
 		//
 	};
 
+	const [dimensions, setDimensions] = React.useState({
+		height: window.innerHeight,
+
+		width: window.innerWidth,
+	});
+
+	React.useEffect(() => {
+		let timeout: NodeJS.Timeout;
+		// clearTimeout(timeout)
+		const effectCB = () => {
+			clearTimeout(timeout);
+			timeout = setTimeout(() => {
+				setDimensions({
+					height: window.innerHeight,
+					width: window.innerWidth,
+				});
+			}, 250);
+		};
+		window.addEventListener('resize', effectCB);
+
+		return () => {
+			window.removeEventListener('resize', effectCB);
+		};
+	});
+
+	console.log(dimensions);
+
 	return (
 		<>
 			{' '}
-			{window.innerWidth < 600 && (
+			{dimensions.width < 600 && (
 				<IconButton
 					onClick={() => setSideBarOpen(true)}
 					sx={{ position: 'absolute', bottom: '5px', right: '5px' }}
@@ -122,12 +145,11 @@ const Sidebar = () => {
 					<MenuIcon />
 				</IconButton>
 			)}
-			<SwipeableDrawer
+			<Drawer
 				container={window.document.body}
 				open={sideBarOpen}
-				variant={window.innerWidth < 1000 ? 'temporary' : 'permanent'}
-				onOpen={() => setSideBarOpen(true)}
-				anchor={window.innerWidth < 1000 ? 'right' : 'left'}
+				variant={dimensions.width < 1000 ? 'temporary' : 'permanent'}
+				anchor={dimensions.width < 1000 ? 'right' : 'left'}
 				onClose={() => setSideBarOpen(false)}
 				sx={{
 					width: sidebarWidth,
@@ -232,7 +254,7 @@ const Sidebar = () => {
 						</DragDropContext>
 					</Box>
 				</List>
-			</SwipeableDrawer>
+			</Drawer>
 		</>
 	);
 };

@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { EffectCallback } from 'react';
 import {
 	Box,
 	Button,
@@ -235,6 +235,31 @@ const Kanban = (props: SectionInterface) => {
 		}
 	};
 
+	const [dimensions, setDimensions] = React.useState({
+		height: window.innerHeight,
+
+		width: window.innerWidth,
+	});
+
+	React.useEffect(() => {
+		let timeout: NodeJS.Timeout;
+		// clearTimeout(timeout)
+		const effectCB = () => {
+			clearTimeout(timeout);
+			timeout = setTimeout(() => {
+				setDimensions({
+					height: window.innerHeight,
+					width: window.innerWidth,
+				});
+			}, 250);
+		};
+		window.addEventListener('resize', effectCB);
+
+		return () => {
+			window.removeEventListener('resize', effectCB);
+		};
+	});
+
 	return (
 		<>
 			<Box
@@ -258,7 +283,7 @@ const Kanban = (props: SectionInterface) => {
 						overflowX: 'auto',
 						alignItems: 'flex-start',
 						width:
-							window.innerWidth < 600
+							dimensions.width < 600
 								? window.innerWidth
 								: 'calc(100vw - 400px)',
 					}}
