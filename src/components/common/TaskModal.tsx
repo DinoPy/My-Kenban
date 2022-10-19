@@ -37,7 +37,7 @@ const modalStyle = {
 	width: '50%',
 	transform: 'translate(-50%, -50%)',
 	bgcolor: 'background.paper',
-	border: '0px solid #000',
+	// border: '0px solid #000',
 	boxShadow: 24,
 	p: 1,
 	height: '80%',
@@ -49,7 +49,7 @@ const maximizedModalStyle = {
 	height: '96%',
 	boxShadow: 24,
 	width: `min(90vw, 1800px)`,
-	border: '2`min(100vw, 1800px)`px solid #000',
+	border: '2px solid #000',
 	padding: '1em',
 };
 

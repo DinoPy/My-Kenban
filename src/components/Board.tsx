@@ -253,7 +253,16 @@ const Board = () => {
 				</IconButton>
 			</Box>
 
-			<Box sx={{ padding: '10px 50px' }}>
+			<Box
+				sx={(theme) => ({
+					[theme.breakpoints.down('sm')]: {
+						padding: '10px 10px',
+					},
+					[theme.breakpoints.up('sm')]: {
+						padding: '10px 50px',
+					},
+				})}
+			>
 				<Box>
 					<EmojiPicker icon={icon} onChange={onEmojiChange} />
 					<TextField
