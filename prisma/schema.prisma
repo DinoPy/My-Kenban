@@ -67,7 +67,7 @@ model Section {
 model Task {
     id       String @id @default(cuid())
     title    String @default("")
-    content  String @default("") // @db.Text
+    content  String @default("") @db.Text
     position Int    @default(0)
 
     sectionId String
