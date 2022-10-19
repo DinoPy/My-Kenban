@@ -27,6 +27,13 @@ model UserSchema {
     BoardSchema Board[]
 }
 
+model FolderContainer {
+    id   String @id @default(cuid())
+    name String
+
+    Boards Board[]
+}
+
 model Board {
     id               String  @id @default(cuid())
     title            String  @default("Untitled")
@@ -39,9 +46,11 @@ model Board {
     createdAt DateTime @default(now())
     updatedAt DateTime @updatedAt
 
-    userId  String
-    user    UserSchema @relation(fields: [userId], references: [id], onDelete: Cascade)
-    Section Section[]
+    userId            String
+    user              UserSchema       @relation(fields: [userId], references: [id], onDelete: Cascade)
+    Section           Section[]
+    FolderContainer   FolderContainer? @relation(fields: [folderContainerId], references: [id])
+    folderContainerId String?
 }
 
 model Section {
@@ -58,7 +67,7 @@ model Section {
 model Task {
     id       String @id @default(cuid())
     title    String @default("")
-    content  String @default("") @db.Text
+    content  String @default("") // @db.Text
     position Int    @default(0)
 
     sectionId String

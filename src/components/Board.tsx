@@ -241,7 +241,14 @@ const Board = () => {
 						//
 					}
 				</IconButton>
-				<IconButton color='error' onClick={onDeleteBoard}>
+				<IconButton
+					color='error'
+					onClick={() =>
+						window.confirm(
+							'Are you sure you want to permanenly delete this board?'
+						) && onDeleteBoard()
+					}
+				>
 					<DeleteForever />
 				</IconButton>
 			</Box>

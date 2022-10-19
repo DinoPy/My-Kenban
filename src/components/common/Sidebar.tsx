@@ -137,7 +137,7 @@ const Sidebar = () => {
 	return (
 		<>
 			{' '}
-			{dimensions.width < 600 && (
+			{dimensions.width < 1000 && (
 				<IconButton
 					onClick={() => setSideBarOpen(true)}
 					sx={{ position: 'absolute', bottom: '5px', right: '5px' }}

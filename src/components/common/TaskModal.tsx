@@ -1,11 +1,14 @@
 import DeleteForever from '@mui/icons-material/DeleteForever';
+import CloseIcon from '@mui/icons-material/Close';
 import {
 	Backdrop,
 	Box,
 	Divider,
 	Fade,
+	FormControlLabel,
 	IconButton,
 	Modal,
+	Switch,
 	TextField,
 	Typography,
 } from '@mui/material';
@@ -23,6 +26,7 @@ export interface TaskModalInterface {
 	onClose: () => void;
 	onUpdate: (task: TaskInterface) => void;
 	onDelete: (task: TaskInterface) => void;
+	dimensions: { height: number; width: number };
 }
 
 const modalStyle = {
@@ -39,13 +43,25 @@ const modalStyle = {
 	height: '80%',
 };
 
+const maximizedModalStyle = {
+	bgcolor: 'background.paper',
+	position: 'absolute',
+	height: '96%',
+	boxShadow: 24,
+	width: `min(90vw, 1800px)`,
+	border: '2`min(100vw, 1800px)`px solid #000',
+	padding: '1em',
+};
+
 let timer: NodeJS.Timeout;
 const timeout = 500;
 
 const TaskModal = (props: TaskModalInterface) => {
-	const boardId = props.boardId;
 	const taskDeleteMutation = trpc.task.delete.useMutation();
 	const taskUpdateMutation = trpc.task.update.useMutation();
+
+	const [isTaskModalMaximized, setIsTaskModalMaximized] =
+		React.useState<boolean>(props.dimensions.width < 600 ? true : false);
 
 	const [task, setTask] = React.useState<TaskInterface | undefined>(props.task);
 	const [isDeleting, setIsDeleting] = React.useState(false);
@@ -127,6 +143,14 @@ const TaskModal = (props: TaskModalInterface) => {
 		}
 	};
 
+	const width = `${
+		props.dimensions.width >= 1800
+			? `${(props.dimensions.width - 1800) / 2}px`
+			: '5%'
+	}`;
+
+	console.log(isTaskModalMaximized);
+
 	return (
 		<Modal
 			open={task !== undefined}
@@ -136,7 +160,16 @@ const TaskModal = (props: TaskModalInterface) => {
 			onClose={() => onClose()}
 		>
 			<Fade in={task !== undefined}>
-				<Box sx={modalStyle}>
+				<Box
+					sx={
+						isTaskModalMaximized
+							? {
+									...maximizedModalStyle,
+									transform: `translate(calc(${width}	), 3%)`,
+							  }
+							: modalStyle
+					}
+				>
 					<Box
 						sx={{
 							display: 'flex',
@@ -145,13 +178,38 @@ const TaskModal = (props: TaskModalInterface) => {
 							width: '100%',
 						}}
 					>
-						<IconButton
-							color='error'
-							onClick={onDeleteTask}
-							disabled={isDeleting}
-						>
-							<DeleteForever />
-						</IconButton>
+						<Box>
+							{props.dimensions.width > 600 && (
+								<FormControlLabel
+									control={
+										<Switch
+											value={isTaskModalMaximized}
+											onChange={() => setIsTaskModalMaximized((prev) => !prev)}
+											defaultChecked={isTaskModalMaximized}
+										/>
+									}
+									label='Maximize'
+									labelPlacement='start'
+									sx={{ marginRight: '1em' }}
+								/>
+							)}
+							<IconButton
+								color='error'
+								onClick={() =>
+									window.confirm(
+										'Are you sure you want to permanenly delete this task?'
+									) && onDeleteTask()
+								}
+								disabled={isDeleting}
+							>
+								<DeleteForever />
+							</IconButton>
+						</Box>
+						<Box sx={{ justifySelf: 'flex-start' }}>
+							<IconButton onClick={() => onClose()}>
+								<CloseIcon />
+							</IconButton>
+						</Box>
 					</Box>
 
 					<Box
@@ -159,7 +217,9 @@ const TaskModal = (props: TaskModalInterface) => {
 							display: 'flex',
 							height: '100%',
 							flexDirection: 'column',
-							padding: '2rem 5rem 5rem',
+							padding: isTaskModalMaximized
+								? '0rem .5rem 3rem'
+								: '2rem 3rem 3rem',
 						}}
 					>
 						<TextField
@@ -185,10 +245,11 @@ const TaskModal = (props: TaskModalInterface) => {
 								? Moment(task.createdAt).format('DD/MM/YYYY')
 								: ''}
 						</Typography>
-						<Divider sx={{ my: 5 }} />
+						<Divider sx={{ my: 3 }} />
 						<Box
 							sx={{
-								height: '80%',
+								height: '100%',
+								border: '1px #252525 solid',
 								overflowX: 'hidden',
 								overflowY: 'hidden',
 							}}

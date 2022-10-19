@@ -29,7 +29,7 @@ const AppLayout = ({ children }: { children: ReactNode }) => {
 				sx={{
 					flexGrow: 1,
 					p: 1,
-					width: 'max-content',
+					width: '400px',
 				}}
 			>
 				{children}

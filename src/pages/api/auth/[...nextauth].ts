@@ -25,7 +25,7 @@ export const authOptions: NextAuthOptions = {
 					await prisma.userSchema.create({
 						data: {
 							email: String(user?.email),
-							name: String(user?.email),
+							name: String(user?.name),
 							password: String(user?.id),
 						},
 					});

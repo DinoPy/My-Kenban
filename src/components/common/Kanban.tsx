@@ -1,4 +1,4 @@
-import React, { EffectCallback } from 'react';
+import React from 'react';
 import {
 	Box,
 	Button,
@@ -63,8 +63,6 @@ const Kanban = (props: SectionInterface) => {
 	const updateSectionMutation = trpc.section.update.useMutation();
 
 	const addTaskMutation = trpc.task.create.useMutation();
-	const removeTaskMutation = trpc.task.delete.useMutation();
-	const updateTaskMutation = trpc.task.update.useMutation();
 	const updateTaskPositionMutation = trpc.task.updatePosition.useMutation();
 
 	React.useEffect(() => {
@@ -282,10 +280,7 @@ const Kanban = (props: SectionInterface) => {
 						display: 'flex',
 						overflowX: 'auto',
 						alignItems: 'flex-start',
-						width:
-							dimensions.width < 600
-								? window.innerWidth
-								: 'calc(100vw - 400px)',
+						width: dimensions.width < 1000 ? '100%' : 'calc(100vw - 400px)',
 					}}
 				>
 					{sections.map((section) => (
@@ -336,7 +331,11 @@ const Kanban = (props: SectionInterface) => {
 											<IconButton
 												size='small'
 												sx={{ color: 'gray', '&:hover': { color: 'red' } }}
-												onClick={() => handleDeleteSection(section.id)}
+												onClick={() =>
+													window.confirm(
+														'Are you sure you want to permanenly delete this section?'
+													) && handleDeleteSection(section.id)
+												}
 											>
 												<DeleteForever />
 											</IconButton>
@@ -389,6 +388,7 @@ const Kanban = (props: SectionInterface) => {
 					onClose={() => setSelectedTask(undefined)}
 					onUpdate={taskUpdateHandler}
 					onDelete={taskDeleteHandler}
+					dimensions={dimensions}
 				/>
 			)}
 		</>

@@ -3,7 +3,7 @@ CREATE TABLE "UserSchema" (
     "id" TEXT NOT NULL PRIMARY KEY,
     "email" TEXT NOT NULL,
     "name" TEXT NOT NULL,
-    "password" TEXT NOT NULL,
+    "password" TEXT,
     "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" DATETIME NOT NULL
 );
@@ -21,8 +21,7 @@ CREATE TABLE "Board" (
     "favoritePosition" INTEGER NOT NULL DEFAULT 0,
     "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" DATETIME NOT NULL,
-    "userId" TEXT NOT NULL,
-    CONSTRAINT "Board_userId_fkey" FOREIGN KEY ("userId") REFERENCES "UserSchema" ("id") ON DELETE CASCADE ON UPDATE CASCADE
+    "userId" TEXT NOT NULL
 );
 
 -- CreateTable
@@ -30,7 +29,8 @@ CREATE TABLE "Section" (
     "id" TEXT NOT NULL PRIMARY KEY,
     "title" TEXT NOT NULL DEFAULT '',
     "boardId" TEXT NOT NULL,
-    CONSTRAINT "Section_boardId_fkey" FOREIGN KEY ("boardId") REFERENCES "Board" ("id") ON DELETE CASCADE ON UPDATE CASCADE
+    "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" DATETIME NOT NULL
 );
 
 -- CreateTable
@@ -40,7 +40,8 @@ CREATE TABLE "Task" (
     "content" TEXT NOT NULL DEFAULT '',
     "position" INTEGER NOT NULL DEFAULT 0,
     "sectionId" TEXT NOT NULL,
-    CONSTRAINT "Task_sectionId_fkey" FOREIGN KEY ("sectionId") REFERENCES "Section" ("id") ON DELETE CASCADE ON UPDATE CASCADE
+    "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" DATETIME NOT NULL
 );
 
 -- CreateTable
@@ -56,8 +57,7 @@ CREATE TABLE "Account" (
     "token_type" TEXT,
     "scope" TEXT,
     "id_token" TEXT,
-    "session_state" TEXT,
-    CONSTRAINT "Account_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User" ("id") ON DELETE CASCADE ON UPDATE CASCADE
+    "session_state" TEXT
 );
 
 -- CreateTable
@@ -65,8 +65,7 @@ CREATE TABLE "Session" (
     "id" TEXT NOT NULL PRIMARY KEY,
     "sessionToken" TEXT NOT NULL,
     "userId" TEXT NOT NULL,
-    "expires" DATETIME NOT NULL,
-    CONSTRAINT "Session_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User" ("id") ON DELETE CASCADE ON UPDATE CASCADE
+    "expires" DATETIME NOT NULL
 );
 
 -- CreateTable
