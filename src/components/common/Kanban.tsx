@@ -291,7 +291,7 @@ const Kanban = (props: SectionInterface) => {
 										ref={provided.innerRef}
 										{...provided.droppableProps}
 										sx={{
-											width: '300px',
+											width: `${dimensions.width < 600 ? '200px' : '300px'}`,
 											padding: '10px',
 											marginRight: '10px',
 										}}

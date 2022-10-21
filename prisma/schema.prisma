@@ -9,14 +9,25 @@ datasource db {
   referentialIntegrity = "prisma"
 }
 
+model Folder {
+  id      String     @id @default(cuid())
+  name    String
+  Boards  Board      @relation(fields: [boardId], references: [id])
+  boardId String
+  userId  String
+  user    UserSchema @relation(fields: [userId], references: [id])
+}
+
 model UserSchema {
-  id          String   @id @default(cuid())
-  email       String   @unique
-  name        String
-  password    String?
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-  BoardSchema Board[]
+  id        String   @id @default(cuid())
+  email     String   @unique
+  name      String
+  password  String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  Board  Board[]
+  Folder Folder[]
 }
 
 model Board {
@@ -32,6 +43,7 @@ model Board {
   userId           String
   user             UserSchema @relation(fields: [userId], references: [id], onDelete: Cascade)
   Section          Section[]
+  Folder           Folder[]
 }
 
 model Section {
