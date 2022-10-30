@@ -11,18 +11,18 @@ import { trpc } from '../utils/trpc';
 import { useSession } from 'next-auth/react';
 import Board from '../components/Board';
 import { setActiveBoard } from '../redux/features/activeBoardSlice';
-import { setFolders } from '../redux/features/folderSlice';
+import { folderSlice, setFolders } from '../redux/features/folderSlice';
 
 const Home: NextPage = () => {
 	const dispatch = useAppDispatch();
 	const boards = useAppSelector((state) => state.board.value);
+	const folders = useAppSelector((state) => state.folders.value);
 	const { data: session } = useSession();
 	const ctx = trpc.useContext();
 
 	const folderMutation = trpc.folder.create.useMutation({
 		onSuccess(data) {
 			ctx.board.getAll.invalidate();
-			console.log(data?.Board);
 			dispatch(setBoards(data?.Board));
 			dispatch(setFolders([data]));
 			dispatch(setActiveBoard(data?.Board[0]?.id));
@@ -46,7 +46,7 @@ const Home: NextPage = () => {
 
 	return (
 		<AppLayout>
-			{boards?.length < 1 ? (
+			{boards?.length < 1 && folders?.length < 1 ? (
 				<Box
 					sx={{
 						height: '100%',

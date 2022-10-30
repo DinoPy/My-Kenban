@@ -61,7 +61,7 @@ const TaskModal = (props: TaskModalInterface) => {
 	const taskUpdateMutation = trpc.task.update.useMutation();
 
 	const [isTaskModalMaximized, setIsTaskModalMaximized] =
-		React.useState<boolean>(props.dimensions.width < 600 ? true : false);
+		React.useState<boolean>(props.dimensions.width < 1200 ? true : false);
 
 	const [task, setTask] = React.useState<TaskInterface | undefined>(props.task);
 	const [isDeleting, setIsDeleting] = React.useState(false);
