@@ -11,28 +11,32 @@ import { trpc } from '../utils/trpc';
 import { useSession } from 'next-auth/react';
 import Board from '../components/Board';
 import { setActiveBoard } from '../redux/features/activeBoardSlice';
+import { setFolders } from '../redux/features/folderSlice';
 
 const Home: NextPage = () => {
 	const dispatch = useAppDispatch();
 	const boards = useAppSelector((state) => state.board.value);
 	const { data: session } = useSession();
 	const ctx = trpc.useContext();
-	const boardMutation = trpc.board.create.useMutation({
+
+	const folderMutation = trpc.folder.create.useMutation({
 		onSuccess(data) {
 			ctx.board.getAll.invalidate();
-			dispatch(setBoards([data]));
-			dispatch(setActiveBoard(data.id));
+			console.log(data?.Board);
+			dispatch(setBoards(data?.Board));
+			dispatch(setFolders([data]));
+			dispatch(setActiveBoard(data?.Board[0]?.id));
 		},
 	});
 
 	const [loading, setLoading] = React.useState(false);
 
-	const createBoard = () => {
+	const createBoard = async () => {
 		setLoading(true);
 		try {
-			boardMutation.mutateAsync({
-				userId: String(session?.user?.id),
-			});
+			if (session && session.user && session.user.id) {
+				await folderMutation.mutateAsync({ userId: session?.user?.id });
+			}
 		} catch (e) {
 			console.error(e);
 		} finally {

@@ -11,6 +11,7 @@ import { trpc } from '../utils/trpc';
 import EmojiPicker from './common/EmojiPicker';
 import Kenban, { SectionInterface } from '../components/common/Kanban';
 import { useSession } from 'next-auth/react';
+import { setFolders } from '../redux/features/folderSlice';
 
 let timer: NodeJS.Timeout;
 const timeout = 500;
@@ -20,6 +21,7 @@ const Board = () => {
 	const dispatch = useAppDispatch();
 	const activeBoard = useAppSelector((state) => state.activeBoard.value);
 	const boards = useAppSelector((state) => state.board.value);
+	const folders = useAppSelector((state) => state.folders.value);
 	const favoritedBoards = useAppSelector(
 		(state) => state.favoritedBoards.value
 	);
@@ -199,14 +201,22 @@ const Board = () => {
 
 	const onDeleteBoard = async () => {
 		try {
-			await boardDeleteMutation.mutateAsync({
+			const data = await boardDeleteMutation.mutateAsync({
 				id: activeBoard,
 				userId: String(session?.user?.id),
+				folderId: String(currentBoard?.folderId),
 			});
 
 			const updatedBoards = boards.filter((board) => board.id !== activeBoard);
 			dispatch(setBoards(updatedBoards));
 
+			const newFolders = folders
+				.map((f) => {
+					return { ...f, Board: f.Board.filter((i) => i.id !== data!.id) };
+				})
+				.filter((f) => f.Board.length > 0);
+
+			dispatch(setFolders(newFolders));
 			dispatch(setActiveBoard(updatedBoards[0]?.id));
 
 			if (isFavorite) {

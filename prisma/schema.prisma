@@ -4,18 +4,20 @@ generator client {
 }
 
 datasource db {
-  provider             = "mysql"
+  provider             = "sqlite"
   url                  = env("DATABASE_URL")
   referentialIntegrity = "prisma"
 }
 
 model Folder {
-  id      String     @id @default(cuid())
-  name    String
-  Boards  Board      @relation(fields: [boardId], references: [id])
-  boardId String
-  userId  String
-  user    UserSchema @relation(fields: [userId], references: [id])
+  id           String     @id @default(cuid())
+  name         String     @default("Project folder")
+  userSchemaId String
+  User         UserSchema @relation(fields: [userSchemaId], references: [id], onDelete: Cascade)
+  Board        Board[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 model UserSchema {
@@ -43,7 +45,8 @@ model Board {
   userId           String
   user             UserSchema @relation(fields: [userId], references: [id], onDelete: Cascade)
   Section          Section[]
-  Folder           Folder[]
+  folder           Folder     @relation(fields: [folderId], references: [id], onDelete: Cascade)
+  folderId         String
 }
 
 model Section {
@@ -59,54 +62,10 @@ model Section {
 model Task {
   id        String   @id @default(cuid())
   title     String   @default("")
-  content   String   @default(dbgenerated("(_utf8mb4\\'\\')")) @db.Text
+  content   String   @default("You can add description here") // @db.Text
   position  Int      @default(0)
   sectionId String
   section   Section  @relation(fields: [sectionId], references: [id], onDelete: Cascade)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
-}
-
-model Account {
-  id                String  @id @default(cuid())
-  userId            String
-  type              String
-  provider          String
-  providerAccountId String
-  refresh_token     String?
-  access_token      String?
-  expires_at        Int?
-  token_type        String?
-  scope             String?
-  id_token          String?
-  session_state     String?
-  user              User    @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  @@unique([provider, providerAccountId])
-}
-
-model Session {
-  id           String   @id @default(cuid())
-  sessionToken String   @unique
-  userId       String
-  expires      DateTime
-  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-}
-
-model User {
-  id            String    @id @default(cuid())
-  name          String?
-  email         String?   @unique
-  emailVerified DateTime?
-  image         String?
-  accounts      Account[]
-  sessions      Session[]
-}
-
-model VerificationToken {
-  identifier String
-  token      String   @unique
-  expires    DateTime
-
-  @@unique([identifier, token])
 }

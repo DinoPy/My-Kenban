@@ -1,8 +1,9 @@
+import { folderReturn } from './folder';
 import { TRPCError } from '@trpc/server';
 import { z } from 'zod';
 import { t } from '../trpc';
 
-const boardReturn = {
+export const boardReturn = {
 	id: true,
 	title: true,
 	icon: true,
@@ -12,6 +13,7 @@ const boardReturn = {
 	favoritePosition: true,
 	createdAt: true,
 	userId: true,
+	folderId: true,
 };
 
 const sectionReturn = {
@@ -38,12 +40,18 @@ const sectionReturn = {
 // complete the input from the client once we have more details
 export const boardRouter = t.router({
 	create: t.procedure
-		.input(z.object({ userId: z.string() }))
+		.input(z.object({ userId: z.string(), folderId: z.string() }))
 		.mutation(async ({ ctx, input }) => {
-			const boards = await ctx.prisma.board.count();
+			const boards = await ctx.prisma.board.count({
+				where: {
+					folderId: input.folderId,
+				},
+			});
+
 			const newBoard = await ctx.prisma.board.create({
 				data: {
 					userId: input.userId,
+					folderId: input.folderId,
 					position: boards > 0 ? boards + 1 : 1,
 				},
 				select: boardReturn,
@@ -67,7 +75,18 @@ export const boardRouter = t.router({
 					},
 					select: boardReturn,
 				});
-				return boards;
+
+				const folders = await ctx.prisma.folder.findMany({
+					where: {
+						userSchemaId: input.userId,
+					},
+					orderBy: {
+						updatedAt: 'desc',
+					},
+					select: folderReturn,
+				});
+
+				return { boards, folders };
 			} catch (e) {
 				console.log(e);
 			}
@@ -173,7 +192,9 @@ export const boardRouter = t.router({
 			}
 		}),
 	deleteBoard: t.procedure
-		.input(z.object({ id: z.string(), userId: z.string() }))
+		.input(
+			z.object({ id: z.string(), userId: z.string(), folderId: z.string() })
+		)
 		.mutation(async ({ ctx, input }) => {
 			try {
 				const board = await ctx.prisma.board.findFirst({
@@ -187,12 +208,33 @@ export const boardRouter = t.router({
 					});
 				}
 
-				const deleted = await ctx.prisma.board.delete({
-					where: {
-						id: input.id,
-					},
-					select: boardReturn,
+				const folderBoards = await ctx.prisma.board.findMany({
+					where: { folderId: input.folderId },
 				});
+
+				let deleted;
+
+				if (folderBoards.length === 1) {
+					const toDelete = await ctx.prisma.folder.delete({
+						where: {
+							id: input.folderId,
+						},
+						select: {
+							Board: {
+								select: boardReturn,
+							},
+						},
+					});
+					deleted = toDelete.Board[0];
+				} else {
+					deleted = await ctx.prisma.board.delete({
+						where: {
+							id: input.id,
+						},
+						select: boardReturn,
+					});
+				}
+
 				return deleted;
 			} catch (e) {
 				console.log(e);
