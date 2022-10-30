@@ -21,6 +21,7 @@ const sectionReturn = {
 		select: {
 			id: true,
 			title: true,
+			position: true,
 			task: {
 				select: {
 					id: true,
@@ -127,7 +128,10 @@ export const boardRouter = t.router({
 				where: {
 					id: input.id,
 				},
-				select: { ...boardReturn, ...sectionReturn },
+				select: {
+					...boardReturn,
+					...sectionReturn,
+				},
 			});
 			return board;
 		}),

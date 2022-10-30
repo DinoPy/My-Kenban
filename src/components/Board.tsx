@@ -51,14 +51,12 @@ const Board = () => {
 			const { data } = await refetch();
 			setTitle(data?.title);
 			setDescription(data?.description);
-			setSections(data?.Section || []);
+			setSections(data?.Section.sort((a, b) => a.position - b.position) || []);
 			setIsFavorite(data?.favorite);
 			setIcon(data?.icon || '📝');
 		};
 
 		fetchBoard();
-
-		console.log(sections);
 	}, [activeBoard, refetch]);
 
 	// update the emoji icon

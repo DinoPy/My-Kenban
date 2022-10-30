@@ -135,10 +135,18 @@ const Sidebar = () => {
 	const createBoard = async (folderId: string) => {
 		try {
 			if (session && session.user && session.user.id) {
-				boardMutation.mutateAsync({
+				const newBoard = await boardMutation.mutateAsync({
 					userId: session?.user?.id,
 					folderId,
 				});
+
+				dispatch(
+					setFolders(
+						folders.map((f) =>
+							f.id === folderId ? { ...f, Board: [newBoard, ...f.Board] } : f
+						)
+					)
+				);
 			}
 		} catch (e) {
 			console.error(e);

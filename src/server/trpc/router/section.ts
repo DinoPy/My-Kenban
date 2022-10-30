@@ -1,10 +1,11 @@
 import { TRPCError } from '@trpc/server';
-import { z } from 'zod';
+import { z, number } from 'zod';
 import { t } from '../trpc';
 
 const sectionReturn = {
 	id: true,
 	title: true,
+	position: true,
 	task: {
 		select: {
 			id: true,
@@ -70,6 +71,37 @@ export const sectionRouter = t.router({
 				throw new TRPCError({
 					message: (e as Error).message,
 					code: 'INTERNAL_SERVER_ERROR',
+				});
+			}
+		}),
+	positonUpdate: t.procedure
+		.input(
+			z.array(
+				z.object({
+					id: z.string(),
+					position: z.number(),
+				})
+			)
+		)
+		.mutation(async ({ ctx, input }) => {
+			////
+
+			for (const index in input) {
+				console.log(index);
+				await ctx.prisma.section.update({
+					where: {
+						id: input[index]?.id,
+					},
+					data: {
+						position: parseInt(index),
+					},
+				});
+			}
+			try {
+			} catch (e) {
+				throw new TRPCError({
+					message: JSON.stringify(e),
+					code: 'BAD_REQUEST',
 				});
 			}
 		}),

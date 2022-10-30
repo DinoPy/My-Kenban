@@ -10,6 +10,7 @@ import {
 } from '@mui/material';
 import AddOutlinedIcon from '@mui/icons-material/Add';
 import DeleteForever from '@mui/icons-material/DeleteForever';
+import DragHandleIcon from '@mui/icons-material/DragHandle';
 import { useAppSelector } from '../../redux/hooks';
 import {
 	DragDropContext,
@@ -28,6 +29,7 @@ export interface SectionInterface {
 		| {
 				title: string;
 				id: string;
+				position: number;
 				task: {
 					id: string;
 					title: string;
@@ -61,6 +63,8 @@ const Kanban = (props: SectionInterface) => {
 	const addSectionMutation = trpc.section.create.useMutation();
 	const removeSectionMutation = trpc.section.delete.useMutation();
 	const updateSectionMutation = trpc.section.update.useMutation();
+	const updateSectionPositionMutation =
+		trpc.section.positonUpdate.useMutation();
 
 	const addTaskMutation = trpc.task.create.useMutation();
 	const updateTaskPositionMutation = trpc.task.updatePosition.useMutation();
@@ -138,61 +142,82 @@ const Kanban = (props: SectionInterface) => {
 	};
 
 	const onDragEnd = async (result: DropResult) => {
-		const { source, destination } = result;
+		console.log(result);
+		const { source, destination, type } = result;
 		if (!destination) return;
 
-		const sourceSectionIndex = sections.findIndex(
-			(s) => s.id === source.droppableId
-		);
-		const destinationSectionIndex = sections.findIndex(
-			(s) => s.id === destination.droppableId
-		);
-		const sourceCol = sections[sourceSectionIndex];
-		const destCol = sections[destinationSectionIndex];
+		switch (type) {
+			case 'SECTIONS': {
+				const copySection = Array.from(sections);
+				const removed = copySection.splice(source.index, 1);
+				copySection.splice(destination.index, 0, ...removed);
+				setSections(copySection);
 
-		if (sourceCol?.task && destCol?.task) {
-			const sourceItems = [...sourceCol.task];
-			const destItems = [...destCol.task];
-
-			const copy = [...sections];
-
-			if (source.droppableId !== destination.droppableId) {
-				const [removed] = sourceItems.splice(source.index, 1);
-				if (removed) {
-					destItems.splice(destination.index, 0, removed);
+				try {
+					const response = await updateSectionPositionMutation.mutateAsync(
+						copySection
+					);
+				} catch (e) {
+					console.log(e);
 				}
-
-				copy[sourceSectionIndex] = {
-					...sourceCol,
-					task: sourceItems,
-				};
-
-				copy[destinationSectionIndex] = {
-					...destCol,
-					task: destItems,
-				};
-			} else {
-				const [removed] = sourceItems.splice(source.index, 1);
-				if (removed) {
-					sourceItems.splice(destination.index, 0, removed);
-				}
-
-				copy[sourceSectionIndex] = {
-					...sourceCol,
-					task: sourceItems,
-				};
+				break;
 			}
+			case 'TASKS': {
+				const sourceSectionIndex = sections.findIndex(
+					(s) => s.id === source.droppableId
+				);
+				const destinationSectionIndex = sections.findIndex(
+					(s) => s.id === destination.droppableId
+				);
+				const sourceCol = sections[sourceSectionIndex];
+				const destCol = sections[destinationSectionIndex];
 
-			setSections(copy);
-			try {
-				await updateTaskPositionMutation.mutateAsync({
-					resourceSectionId: source.droppableId,
-					destinationSectionId: destination.droppableId,
-					destinationList: destItems,
-					resourceList: sourceItems,
-				});
-			} catch (e) {
-				console.log(e);
+				if (sourceCol?.task && destCol?.task) {
+					const sourceItems = [...sourceCol.task];
+					const destItems = [...destCol.task];
+
+					const copy = [...sections];
+
+					if (source.droppableId !== destination.droppableId) {
+						const [removed] = sourceItems.splice(source.index, 1);
+						if (removed) {
+							destItems.splice(destination.index, 0, removed);
+						}
+
+						copy[sourceSectionIndex] = {
+							...sourceCol,
+							task: sourceItems,
+						};
+
+						copy[destinationSectionIndex] = {
+							...destCol,
+							task: destItems,
+						};
+					} else {
+						const [removed] = sourceItems.splice(source.index, 1);
+						if (removed) {
+							sourceItems.splice(destination.index, 0, removed);
+						}
+
+						copy[sourceSectionIndex] = {
+							...sourceCol,
+							task: sourceItems,
+						};
+					}
+
+					setSections(copy);
+					try {
+						await updateTaskPositionMutation.mutateAsync({
+							resourceSectionId: source.droppableId,
+							destinationSectionId: destination.droppableId,
+							destinationList: destItems,
+							resourceList: sourceItems,
+						});
+					} catch (e) {
+						console.log(e);
+					}
+				}
+				break;
 			}
 		}
 	};
@@ -275,111 +300,155 @@ const Kanban = (props: SectionInterface) => {
 			</Box>
 			<Divider sx={{ margin: '10px 0' }} />
 			<DragDropContext onDragEnd={onDragEnd}>
-				<Box
-					sx={{
-						display: 'flex',
-						overflowX: 'auto',
-						alignItems: 'flex-start',
-						width: dimensions.width < 1000 ? '100%' : 'calc(100vw - 400px)',
-					}}
+				<Droppable
+					droppableId='column-reorder'
+					direction='horizontal'
+					type='SECTIONS'
 				>
-					{sections.map((section) => (
-						<div key={section.id} style={{ width: '300px' }}>
-							<Droppable key={section.id} droppableId={section.id}>
-								{(provided) => (
-									<Box
-										ref={provided.innerRef}
-										{...provided.droppableProps}
-										sx={{
-											width: `${dimensions.width < 600 ? '200px' : '300px'}`,
-											padding: '10px',
-											marginRight: '10px',
-										}}
-									>
-										<Box
-											sx={{
-												display: 'flex',
-												alignItem: 'center',
-												justifyContent: 'space-between',
-												marginBottom: '10px',
-											}}
+					{(provided, shapshot) => (
+						<Box
+							ref={provided.innerRef}
+							{...provided.droppableProps}
+							sx={{
+								display: 'flex',
+								overflowX: 'auto',
+								alignItems: 'flex-start',
+								width: dimensions.width < 1000 ? '100%' : 'calc(100vw - 400px)',
+								minHeight: 20,
+							}}
+						>
+							{sections.map((section, sectionIndex) => (
+								<Draggable
+									draggableId={section.id}
+									index={sectionIndex}
+									key={section.id}
+								>
+									{(prov, snapshot) => (
+										<div
+											key={section.id}
+											style={{ width: '300px' }}
+											ref={prov.innerRef}
+											{...prov.draggableProps}
 										>
-											<TextField
-												value={section.title}
-												onChange={(e) => handleEditSection(e, section.id)}
-												placeholder='Untitled'
-												variant='outlined'
-												sx={{
-													flexGrow: 1,
-													'& .MuiOutlinedInput-input': { padding: 0 },
-													'& .MuiOutlinedInput-root': {
-														fontSize: '1rem',
-														fontWeight: 700,
-													},
-													'& .MuiOutlinedInput-notchedOutline': {
-														border: 'unset',
-													},
-												}}
-											/>
-											<IconButton
-												size='small'
-												sx={{ color: 'gray', '&:hover': { color: 'green' } }}
-												onClick={() => handleCreateTask(section.id)}
+											<Droppable
+												key={section.id}
+												droppableId={section.id}
+												type='TASKS'
 											>
-												<AddOutlinedIcon />
-											</IconButton>
-											<IconButton
-												size='small'
-												sx={{ color: 'gray', '&:hover': { color: 'red' } }}
-												onClick={() =>
-													window.confirm(
-														'Are you sure you want to permanenly delete this section?'
-													) && handleDeleteSection(section.id)
-												}
-											>
-												<DeleteForever />
-											</IconButton>
-										</Box>
-										{/* tasks */}
-										{section.task.map((task, index) => (
-											<Draggable
-												key={task.id}
-												draggableId={task.id}
-												index={index}
-											>
-												{(provided, snapshot) => (
-													<Card
+												{(provided) => (
+													<Box
 														ref={provided.innerRef}
-														{...provided.draggableProps}
-														{...provided.dragHandleProps}
+														{...provided.droppableProps}
 														sx={{
+															width: `${
+																dimensions.width < 600 ? '200px' : '300px'
+															}`,
 															padding: '10px',
-															marginBottom: '10px',
-															cursor: snapshot.isDragging
-																? 'grab'
-																: 'pointer!important',
+															marginRight: '10px',
 														}}
-														onClick={() =>
-															setSelectedTask({
-																...task,
-																sectionId: section.id,
-															})
-														}
 													>
-														<Typography>
-															{task.title === '' ? 'Untitled' : task.title}
-														</Typography>
-													</Card>
+														<Box
+															sx={{
+																display: 'flex',
+																alignItem: 'center',
+																justifyContent: 'space-between',
+																marginBottom: '10px',
+															}}
+														>
+															<Box {...prov.dragHandleProps}>
+																<DragHandleIcon />
+															</Box>
+															<TextField
+																value={section.title}
+																onChange={(e) =>
+																	handleEditSection(e, section.id)
+																}
+																placeholder='Untitled'
+																variant='outlined'
+																sx={{
+																	flexGrow: 1,
+																	'& .MuiOutlinedInput-input': { padding: 0 },
+																	'& .MuiOutlinedInput-root': {
+																		fontSize: '1rem',
+																		fontWeight: 700,
+																	},
+																	'& .MuiOutlinedInput-notchedOutline': {
+																		border: 'unset',
+																	},
+																}}
+															/>
+															<IconButton
+																size='small'
+																sx={{
+																	color: 'gray',
+																	'&:hover': { color: 'green' },
+																}}
+																onClick={() => handleCreateTask(section.id)}
+															>
+																<AddOutlinedIcon />
+															</IconButton>
+															<IconButton
+																size='small'
+																sx={{
+																	color: 'gray',
+																	'&:hover': { color: 'red' },
+																}}
+																onClick={() =>
+																	window.confirm(
+																		'Are you sure you want to permanenly delete this section?'
+																	) && handleDeleteSection(section.id)
+																}
+															>
+																<DeleteForever />
+															</IconButton>
+														</Box>
+														{/* tasks */}
+														{section.task.map((task, index) => (
+															<Draggable
+																key={task.id}
+																draggableId={task.id}
+																index={index}
+															>
+																{(provided, snapshot) => (
+																	<Card
+																		ref={provided.innerRef}
+																		{...provided.draggableProps}
+																		{...provided.dragHandleProps}
+																		sx={{
+																			padding: '10px',
+																			marginBottom: '10px',
+																			cursor: snapshot.isDragging
+																				? 'grab'
+																				: 'pointer!important',
+																		}}
+																		onClick={() =>
+																			setSelectedTask({
+																				...task,
+																				sectionId: section.id,
+																			})
+																		}
+																	>
+																		<Typography>
+																			{task.title === ''
+																				? 'Untitled'
+																				: task.title}
+																		</Typography>
+																	</Card>
+																)}
+															</Draggable>
+														))}
+														{provided.placeholder}
+													</Box>
 												)}
-											</Draggable>
-										))}
-										{provided.placeholder}
-									</Box>
-								)}
-							</Droppable>
-						</div>
-					))}
-				</Box>
+											</Droppable>
+										</div>
+									)}
+								</Draggable>
+							))}
+							{provided.placeholder}
+						</Box>
+					)}
+				</Droppable>
 			</DragDropContext>
 			{selectedTask && (
 				<TaskModal
