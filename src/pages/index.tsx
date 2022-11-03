@@ -11,28 +11,35 @@ import { trpc } from '../utils/trpc';
 import { useSession } from 'next-auth/react';
 import Board from '../components/Board';
 import { setActiveBoard } from '../redux/features/activeBoardSlice';
+import { folderSlice, setFolders } from '../redux/features/folderSlice';
 
-const Home: NextPage = () => {
+const Home: NextPage<{
+	setThemeValue: (val: boolean) => void;
+	themeValue: boolean;
+}> = ({ setThemeValue, themeValue }) => {
 	const dispatch = useAppDispatch();
 	const boards = useAppSelector((state) => state.board.value);
+	const folders = useAppSelector((state) => state.folders.value);
 	const { data: session } = useSession();
 	const ctx = trpc.useContext();
-	const boardMutation = trpc.board.create.useMutation({
+
+	const folderMutation = trpc.folder.create.useMutation({
 		onSuccess(data) {
 			ctx.board.getAll.invalidate();
-			dispatch(setBoards([data]));
-			dispatch(setActiveBoard(data.id));
+			dispatch(setBoards(data?.Board));
+			dispatch(setFolders([data]));
+			dispatch(setActiveBoard(data?.Board[0]?.id));
 		},
 	});
 
 	const [loading, setLoading] = React.useState(false);
 
-	const createBoard = () => {
+	const createBoard = async () => {
 		setLoading(true);
 		try {
-			boardMutation.mutateAsync({
-				userId: String(session?.user?.id),
-			});
+			if (session && session.user && session.user.id) {
+				await folderMutation.mutateAsync({ userId: session?.user?.id });
+			}
 		} catch (e) {
 			console.error(e);
 		} finally {
@@ -42,7 +49,7 @@ const Home: NextPage = () => {
 
 	return (
 		<AppLayout>
-			{boards?.length < 1 ? (
+			{boards?.length < 1 && folders?.length < 1 ? (
 				<Box
 					sx={{
 						height: '100%',
@@ -61,7 +68,7 @@ const Home: NextPage = () => {
 					</LoadingButton>
 				</Box>
 			) : (
-				<Board />
+				<Board setThemeValue={setThemeValue} themeValue={themeValue} />
 			)}
 		</AppLayout>
 	);

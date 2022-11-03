@@ -7,6 +7,7 @@ interface favorited {
 				title: string;
 				icon: string;
 				favoritedPosition: number;
+				folderId: string;
 		  }[]
 		| [];
 }

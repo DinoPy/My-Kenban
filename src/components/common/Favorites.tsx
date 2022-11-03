@@ -24,11 +24,15 @@ const Favorites = () => {
 
 	const onDragEnd = async (result: DropResult) => {
 		const { destination, source } = result;
-		console.log(result);
 
 		if (!destination) {
 			return;
 		}
+		if (
+			destination.droppableId === source.droppableId &&
+			source.index === destination.index
+		)
+			return;
 
 		const newList = [...favoritedBoards];
 		const [removed] = newList.splice(source.index, 1);

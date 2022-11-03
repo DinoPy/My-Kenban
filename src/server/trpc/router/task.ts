@@ -1,6 +1,7 @@
 import { TRPCError } from '@trpc/server';
 import { z } from 'zod';
 import { t } from '../trpc';
+import { taskReturn } from './board';
 
 export const taskRouter = t.router({
 	create: t.procedure
@@ -22,11 +23,7 @@ export const taskRouter = t.router({
 						position: tasks > 0 ? tasks + 1 : 1,
 					},
 					select: {
-						id: true,
-						title: true,
-						position: true,
-						content: true,
-						createdAt: true,
+						...taskReturn,
 					},
 				});
 				return newTask;
@@ -58,11 +55,7 @@ export const taskRouter = t.router({
 						content: input.content,
 					},
 					select: {
-						id: true,
-						title: true,
-						position: true,
-						content: true,
-						createdAt: true,
+						...taskReturn,
 					},
 				});
 				return task;
@@ -146,9 +139,8 @@ export const taskRouter = t.router({
 						});
 					}
 				}
-
 				for (const key in reversedDestinationList) {
-					await ctx.prisma.task.update({
+					const task = await ctx.prisma.task.update({
 						where: { id: reversedDestinationList[key]?.id },
 						data: {
 							sectionId: input.destinationSectionId,
@@ -162,6 +154,22 @@ export const taskRouter = t.router({
 				console.log(e);
 				throw new TRPCError({
 					message: (e as Error).message,
+					code: 'INTERNAL_SERVER_ERROR',
+				});
+			}
+		}),
+	toggleArchived: t.procedure
+		.input(z.object({ taskId: z.string(), prevState: z.boolean() }))
+		.mutation(async ({ ctx, input }) => {
+			try {
+				const task = await ctx.prisma.task.update({
+					where: { id: input.taskId },
+					data: { archived: !input.prevState },
+				});
+				return { message: 'success' };
+			} catch (e) {
+				throw new TRPCError({
+					message: JSON.stringify(e),
 					code: 'INTERNAL_SERVER_ERROR',
 				});
 			}

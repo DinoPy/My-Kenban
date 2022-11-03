@@ -1,8 +1,9 @@
+import { folderReturn } from './folder';
 import { TRPCError } from '@trpc/server';
 import { z } from 'zod';
 import { t } from '../trpc';
 
-const boardReturn = {
+export const boardReturn = {
 	id: true,
 	title: true,
 	icon: true,
@@ -12,24 +13,24 @@ const boardReturn = {
 	favoritePosition: true,
 	createdAt: true,
 	userId: true,
+	folderId: true,
+	archived: true,
 };
 
-const sectionReturn = {
-	Section: {
-		select: {
-			id: true,
-			title: true,
-			task: {
-				select: {
-					id: true,
-					content: true,
-					title: true,
-					position: true,
-					createdAt: true,
-				},
-			},
-		},
-	},
+export const sectionReturn = {
+	id: true,
+	title: true,
+	position: true,
+	archived: true,
+};
+
+export const taskReturn = {
+	id: true,
+	title: true,
+	position: true,
+	content: true,
+	createdAt: true,
+	archived: true,
 };
 
 // TO DO condition the prisma searches to also include userId of the user
@@ -38,12 +39,18 @@ const sectionReturn = {
 // complete the input from the client once we have more details
 export const boardRouter = t.router({
 	create: t.procedure
-		.input(z.object({ userId: z.string() }))
+		.input(z.object({ userId: z.string(), folderId: z.string() }))
 		.mutation(async ({ ctx, input }) => {
-			const boards = await ctx.prisma.board.count();
+			const boards = await ctx.prisma.board.count({
+				where: {
+					folderId: input.folderId,
+				},
+			});
+
 			const newBoard = await ctx.prisma.board.create({
 				data: {
 					userId: input.userId,
+					folderId: input.folderId,
 					position: boards > 0 ? boards + 1 : 1,
 				},
 				select: boardReturn,
@@ -67,7 +74,18 @@ export const boardRouter = t.router({
 					},
 					select: boardReturn,
 				});
-				return boards;
+
+				const folders = await ctx.prisma.folder.findMany({
+					where: {
+						userSchemaId: input.userId,
+					},
+					orderBy: {
+						position: 'desc',
+					},
+					select: folderReturn,
+				});
+
+				return { boards, folders };
 			} catch (e) {
 				console.log(e);
 			}
@@ -108,7 +126,35 @@ export const boardRouter = t.router({
 				where: {
 					id: input.id,
 				},
-				select: { ...boardReturn, ...sectionReturn },
+				select: {
+					id: true,
+					title: true,
+					icon: true,
+					description: true,
+					position: true,
+					favorite: true,
+					favoritePosition: true,
+					createdAt: true,
+					userId: true,
+					folderId: true,
+					archived: true,
+					Section: {
+						select: {
+							...sectionReturn,
+							task: {
+								select: {
+									...taskReturn,
+								},
+								orderBy: {
+									position: 'desc',
+								},
+							},
+						},
+						orderBy: {
+							position: 'desc',
+						},
+					},
+				},
 			});
 			return board;
 		}),
@@ -173,7 +219,9 @@ export const boardRouter = t.router({
 			}
 		}),
 	deleteBoard: t.procedure
-		.input(z.object({ id: z.string(), userId: z.string() }))
+		.input(
+			z.object({ id: z.string(), userId: z.string(), folderId: z.string() })
+		)
 		.mutation(async ({ ctx, input }) => {
 			try {
 				const board = await ctx.prisma.board.findFirst({
@@ -187,16 +235,56 @@ export const boardRouter = t.router({
 					});
 				}
 
-				const deleted = await ctx.prisma.board.delete({
-					where: {
-						id: input.id,
-					},
-					select: boardReturn,
+				const folderBoards = await ctx.prisma.board.findMany({
+					where: { folderId: input.folderId },
 				});
+
+				let deleted;
+
+				if (folderBoards.length === 1) {
+					const toDelete = await ctx.prisma.folder.delete({
+						where: {
+							id: input.folderId,
+						},
+						select: {
+							Board: {
+								select: boardReturn,
+							},
+						},
+					});
+					deleted = toDelete.Board[0];
+				} else {
+					deleted = await ctx.prisma.board.delete({
+						where: {
+							id: input.id,
+						},
+						select: boardReturn,
+					});
+				}
+
 				return deleted;
 			} catch (e) {
 				console.log(e);
 				return null;
+			}
+		}),
+	archiveBoard: t.procedure
+		.input(z.object({ boardId: z.string(), prevState: z.boolean() }))
+		.mutation(async ({ ctx, input }) => {
+			try {
+				const board = await ctx.prisma.board.update({
+					where: {
+						id: input.boardId,
+					},
+					data: {
+						archived: !input.prevState,
+					},
+				});
+			} catch (e) {
+				throw new TRPCError({
+					message: JSON.stringify(e),
+					code: 'INTERNAL_SERVER_ERROR',
+				});
 			}
 		}),
 });

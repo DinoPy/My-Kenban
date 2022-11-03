@@ -1,3 +1,4 @@
+import { folderRouter } from './folder';
 import { taskRouter } from './task';
 // src/server/trpc/router/index.ts
 import { t } from '../trpc';
@@ -10,6 +11,7 @@ export const appRouter = t.router({
 	board: boardRouter,
 	section: sectionRouter,
 	task: taskRouter,
+	folder: folderRouter,
 });
 
 // export type definition of API

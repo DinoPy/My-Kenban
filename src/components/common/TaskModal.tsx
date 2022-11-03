@@ -3,15 +3,18 @@ import CloseIcon from '@mui/icons-material/Close';
 import {
 	Backdrop,
 	Box,
+	Checkbox,
 	Divider,
 	Fade,
-	FormControlLabel,
 	IconButton,
 	Modal,
 	Switch,
 	TextField,
+	Tooltip,
 	Typography,
 } from '@mui/material';
+import ArchiveOutlinedIcon from '@mui/icons-material/ArchiveOutlined';
+import UnarchiveIcon from '@mui/icons-material/Unarchive';
 import React, { useEffect } from 'react';
 import Moment from 'moment';
 import { TaskInterface } from './Kanban';
@@ -27,6 +30,11 @@ export interface TaskModalInterface {
 	onUpdate: (task: TaskInterface) => void;
 	onDelete: (task: TaskInterface) => void;
 	dimensions: { height: number; width: number };
+	toggleArchiveTask: (
+		taskId: string,
+		sectionId: string,
+		prevState: boolean
+	) => void;
 }
 
 const modalStyle = {
@@ -61,7 +69,7 @@ const TaskModal = (props: TaskModalInterface) => {
 	const taskUpdateMutation = trpc.task.update.useMutation();
 
 	const [isTaskModalMaximized, setIsTaskModalMaximized] =
-		React.useState<boolean>(props.dimensions.width < 600 ? true : false);
+		React.useState<boolean>(props.dimensions.width < 1200 ? true : false);
 
 	const [task, setTask] = React.useState<TaskInterface | undefined>(props.task);
 	const [isDeleting, setIsDeleting] = React.useState(false);
@@ -135,11 +143,19 @@ const TaskModal = (props: TaskModalInterface) => {
 					});
 				}, timeout);
 
-				console.log(task);
 				props.onUpdate({ ...task, content: data });
 			}
 		} catch (e) {
 			console.log(e);
+		}
+	};
+
+	const handleArchiveToggle = (prevState: boolean | undefined) => {
+		if (task) setTask({ ...task, archived: !task?.archived });
+
+		if (props.task && props.task.id && props.task.sectionId) {
+			if (typeof prevState === 'boolean')
+				props.toggleArchiveTask(props.task.id, props.task.sectionId, prevState);
 		}
 	};
 
@@ -148,8 +164,6 @@ const TaskModal = (props: TaskModalInterface) => {
 			? `${(props.dimensions.width - 1800) / 2}px`
 			: '5%'
 	}`;
-
-	console.log(isTaskModalMaximized);
 
 	return (
 		<Modal
@@ -180,19 +194,24 @@ const TaskModal = (props: TaskModalInterface) => {
 					>
 						<Box>
 							{props.dimensions.width > 600 && (
-								<FormControlLabel
-									control={
-										<Switch
-											value={isTaskModalMaximized}
-											onChange={() => setIsTaskModalMaximized((prev) => !prev)}
-											defaultChecked={isTaskModalMaximized}
-										/>
-									}
-									label='Maximize'
-									labelPlacement='start'
-									sx={{ marginRight: '1em' }}
-								/>
+								<Tooltip title='Toggle maximised window'>
+									<Switch
+										value={isTaskModalMaximized}
+										onChange={() => setIsTaskModalMaximized((prev) => !prev)}
+										defaultChecked={isTaskModalMaximized}
+									/>
+								</Tooltip>
 							)}
+
+							<Tooltip title='Archive board'>
+								<Checkbox
+									icon={<ArchiveOutlinedIcon color='info' />}
+									checkedIcon={<UnarchiveIcon color='success' />}
+									checked={task?.archived}
+									onChange={(e) => handleArchiveToggle(task?.archived)}
+								/>
+							</Tooltip>
+
 							<IconButton
 								color='error'
 								onClick={() =>
