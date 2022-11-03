@@ -14,25 +14,23 @@ export const boardReturn = {
 	createdAt: true,
 	userId: true,
 	folderId: true,
+	archived: true,
 };
 
-const sectionReturn = {
-	Section: {
-		select: {
-			id: true,
-			title: true,
-			position: true,
-			task: {
-				select: {
-					id: true,
-					content: true,
-					title: true,
-					position: true,
-					createdAt: true,
-				},
-			},
-		},
-	},
+export const sectionReturn = {
+	id: true,
+	title: true,
+	position: true,
+	archived: true,
+};
+
+export const taskReturn = {
+	id: true,
+	title: true,
+	position: true,
+	content: true,
+	createdAt: true,
+	archived: true,
 };
 
 // TO DO condition the prisma searches to also include userId of the user
@@ -82,7 +80,7 @@ export const boardRouter = t.router({
 						userSchemaId: input.userId,
 					},
 					orderBy: {
-						updatedAt: 'desc',
+						position: 'desc',
 					},
 					select: folderReturn,
 				});
@@ -129,8 +127,33 @@ export const boardRouter = t.router({
 					id: input.id,
 				},
 				select: {
-					...boardReturn,
-					...sectionReturn,
+					id: true,
+					title: true,
+					icon: true,
+					description: true,
+					position: true,
+					favorite: true,
+					favoritePosition: true,
+					createdAt: true,
+					userId: true,
+					folderId: true,
+					archived: true,
+					Section: {
+						select: {
+							...sectionReturn,
+							task: {
+								select: {
+									...taskReturn,
+								},
+								orderBy: {
+									position: 'desc',
+								},
+							},
+						},
+						orderBy: {
+							position: 'desc',
+						},
+					},
 				},
 			});
 			return board;
@@ -243,6 +266,25 @@ export const boardRouter = t.router({
 			} catch (e) {
 				console.log(e);
 				return null;
+			}
+		}),
+	archiveBoard: t.procedure
+		.input(z.object({ boardId: z.string(), prevState: z.boolean() }))
+		.mutation(async ({ ctx, input }) => {
+			try {
+				const board = await ctx.prisma.board.update({
+					where: {
+						id: input.boardId,
+					},
+					data: {
+						archived: !input.prevState,
+					},
+				});
+			} catch (e) {
+				throw new TRPCError({
+					message: JSON.stringify(e),
+					code: 'INTERNAL_SERVER_ERROR',
+				});
 			}
 		}),
 });

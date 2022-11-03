@@ -3,14 +3,18 @@ import {
 	Box,
 	Button,
 	Card,
+	Checkbox,
 	Divider,
 	IconButton,
 	TextField,
+	Tooltip,
 	Typography,
 } from '@mui/material';
 import AddOutlinedIcon from '@mui/icons-material/Add';
 import DeleteForever from '@mui/icons-material/DeleteForever';
 import DragHandleIcon from '@mui/icons-material/DragHandle';
+import ArchiveOutlinedIcon from '@mui/icons-material/ArchiveOutlined';
+import UnarchiveIcon from '@mui/icons-material/Unarchive';
 import { useAppSelector } from '../../redux/hooks';
 import {
 	DragDropContext,
@@ -20,26 +24,10 @@ import {
 } from 'react-beautiful-dnd';
 import { trpc } from '../../utils/trpc';
 import TaskModal from './TaskModal';
+import Tasks from './Tasks';
 
 let timer: NodeJS.Timeout;
 const cooldown = 500;
-
-export interface SectionInterface {
-	sections:
-		| {
-				title: string;
-				id: string;
-				position: number;
-				task: {
-					id: string;
-					title: string;
-					content: string;
-					position: number;
-					createdAt: Date;
-				}[];
-		  }[]
-		| [];
-}
 
 export interface TaskInterface {
 	id: string;
@@ -48,6 +36,19 @@ export interface TaskInterface {
 	position: number;
 	createdAt: Date;
 	sectionId?: string;
+	archived: boolean;
+}
+
+export interface SectionInterface {
+	sections:
+		| {
+				title: string;
+				id: string;
+				position: number;
+				archived: boolean;
+				task: TaskInterface[];
+		  }[]
+		| [];
 }
 
 const Kanban = (props: SectionInterface) => {
@@ -59,15 +60,19 @@ const Kanban = (props: SectionInterface) => {
 	>(undefined);
 
 	const activeBoard = useAppSelector((state) => state.activeBoard.value);
+	const isArchived = useAppSelector((state) => state.archived.value);
 
 	const addSectionMutation = trpc.section.create.useMutation();
 	const removeSectionMutation = trpc.section.delete.useMutation();
 	const updateSectionMutation = trpc.section.update.useMutation();
 	const updateSectionPositionMutation =
 		trpc.section.positonUpdate.useMutation();
+	const toggleSectionArchiveMutation =
+		trpc.section.archiveSection.useMutation();
 
 	const addTaskMutation = trpc.task.create.useMutation();
 	const updateTaskPositionMutation = trpc.task.updatePosition.useMutation();
+	const toggleTaskArchiveMutation = trpc.task.toggleArchived.useMutation();
 
 	React.useEffect(() => {
 		setSections(props.sections);
@@ -120,6 +125,20 @@ const Kanban = (props: SectionInterface) => {
 		}
 	};
 
+	const handleArchiveSection = async (sectionId: string, archived: boolean) => {
+		setSections((prev) =>
+			prev.map((s) =>
+				s.id === sectionId ? { ...s, archived: !s.archived } : s
+			)
+		);
+
+		try {
+			await toggleSectionArchiveMutation.mutateAsync({ sectionId, archived });
+		} catch (e) {
+			console.log(e);
+		}
+	};
+
 	//-------------------------------------TASK-------------------------------------//
 
 	const handleCreateTask = async (sectionId: string) => {
@@ -142,9 +161,13 @@ const Kanban = (props: SectionInterface) => {
 	};
 
 	const onDragEnd = async (result: DropResult) => {
-		console.log(result);
 		const { source, destination, type } = result;
 		if (!destination) return;
+		if (
+			destination.droppableId === source.droppableId &&
+			source.index === destination.index
+		)
+			return;
 
 		switch (type) {
 			case 'SECTIONS': {
@@ -193,6 +216,17 @@ const Kanban = (props: SectionInterface) => {
 							...destCol,
 							task: destItems,
 						};
+						setSections(copy);
+						try {
+							await updateTaskPositionMutation.mutateAsync({
+								resourceSectionId: source.droppableId,
+								destinationSectionId: destination.droppableId,
+								destinationList: destItems,
+								resourceList: sourceItems,
+							});
+						} catch (e) {
+							console.log(e);
+						}
 					} else {
 						const [removed] = sourceItems.splice(source.index, 1);
 						if (removed) {
@@ -203,18 +237,17 @@ const Kanban = (props: SectionInterface) => {
 							...sourceCol,
 							task: sourceItems,
 						};
-					}
-
-					setSections(copy);
-					try {
-						await updateTaskPositionMutation.mutateAsync({
-							resourceSectionId: source.droppableId,
-							destinationSectionId: destination.droppableId,
-							destinationList: destItems,
-							resourceList: sourceItems,
-						});
-					} catch (e) {
-						console.log(e);
+						setSections(copy);
+						try {
+							await updateTaskPositionMutation.mutateAsync({
+								resourceSectionId: source.droppableId,
+								destinationSectionId: destination.droppableId,
+								destinationList: sourceItems,
+								resourceList: destItems,
+							});
+						} catch (e) {
+							console.log(e);
+						}
 					}
 				}
 				break;
@@ -258,6 +291,35 @@ const Kanban = (props: SectionInterface) => {
 		}
 	};
 
+	const toggleArchiveTask = async (
+		taskId: string,
+		sectionId: string,
+		prevState: boolean
+	) => {
+		////
+
+		setSections((prev) =>
+			prev.map((s) => {
+				const newSections =
+					s.id !== sectionId
+						? s
+						: {
+								...s,
+								task: s.task.map((t) =>
+									t.id !== taskId ? t : { ...t, archived: !t.archived }
+								),
+						  };
+				return newSections;
+			})
+		);
+
+		try {
+			await toggleTaskArchiveMutation.mutateAsync({ taskId, prevState });
+		} catch (e) {
+			console.log(e);
+		}
+	};
+
 	const [dimensions, setDimensions] = React.useState({
 		height: window.innerHeight,
 
@@ -295,7 +357,14 @@ const Kanban = (props: SectionInterface) => {
 				<Button onClick={handleAddSection}>Add section</Button>
 				<Typography variant='body2' fontWeight={700}>
 					{' '}
-					{sections.length} sections
+					{sections.length} Sections -{' '}
+					{
+						(isArchived.sections
+							? sections
+							: sections.filter((s) => !s.archived)
+						).length
+					}{' '}
+					Not-Archived
 				</Typography>
 			</Box>
 			<Divider sx={{ margin: '10px 0' }} />
@@ -312,9 +381,9 @@ const Kanban = (props: SectionInterface) => {
 							sx={{
 								display: 'flex',
 								overflowX: 'auto',
+								minHeight: '100%',
 								alignItems: 'flex-start',
 								width: dimensions.width < 1000 ? '100%' : 'calc(100vw - 400px)',
-								minHeight: 20,
 							}}
 						>
 							{sections.map((section, sectionIndex) => (
@@ -340,8 +409,12 @@ const Kanban = (props: SectionInterface) => {
 														ref={provided.innerRef}
 														{...provided.droppableProps}
 														sx={{
+															display:
+																section.archived && !isArchived.sections
+																	? 'none'
+																	: '',
 															width: `${
-																dimensions.width < 600 ? '200px' : '300px'
+																dimensions.width < 600 ? '230px' : '300px'
 															}`,
 															padding: '10px',
 															marginRight: '10px',
@@ -351,91 +424,100 @@ const Kanban = (props: SectionInterface) => {
 															sx={{
 																display: 'flex',
 																alignItem: 'center',
-																justifyContent: 'space-between',
+																justifyContent: 'center',
 																marginBottom: '10px',
 															}}
 														>
-															<Box {...prov.dragHandleProps}>
-																<DragHandleIcon />
-															</Box>
-															<TextField
-																value={section.title}
-																onChange={(e) =>
-																	handleEditSection(e, section.id)
-																}
-																placeholder='Untitled'
-																variant='outlined'
-																sx={{
-																	flexGrow: 1,
-																	'& .MuiOutlinedInput-input': { padding: 0 },
-																	'& .MuiOutlinedInput-root': {
-																		fontSize: '1rem',
-																		fontWeight: 700,
-																	},
-																	'& .MuiOutlinedInput-notchedOutline': {
-																		border: 'unset',
-																	},
-																}}
-															/>
-															<IconButton
-																size='small'
-																sx={{
-																	color: 'gray',
-																	'&:hover': { color: 'green' },
-																}}
-																onClick={() => handleCreateTask(section.id)}
-															>
-																<AddOutlinedIcon />
-															</IconButton>
-															<IconButton
-																size='small'
-																sx={{
-																	color: 'gray',
-																	'&:hover': { color: 'red' },
-																}}
-																onClick={() =>
-																	window.confirm(
-																		'Are you sure you want to permanenly delete this section?'
-																	) && handleDeleteSection(section.id)
-																}
-															>
-																<DeleteForever />
-															</IconButton>
+															<Tooltip title='Drag section'>
+																<Box
+																	{...prov.dragHandleProps}
+																	sx={{ display: 'flex', alignItems: 'center' }}
+																>
+																	<DragHandleIcon color='action' />
+																</Box>
+															</Tooltip>
+
+															<Tooltip title='Rename Section'>
+																<TextField
+																	value={section.title}
+																	onChange={(e) =>
+																		handleEditSection(e, section.id)
+																	}
+																	placeholder='Untitled'
+																	variant='outlined'
+																	sx={{
+																		paddingTop: '7px',
+																		flexGrow: 1,
+																		'& .MuiOutlinedInput-input': { padding: 0 },
+																		'& .MuiOutlinedInput-root': {
+																			fontSize: '1rem',
+																			fontWeight: 700,
+																		},
+																		'& .MuiOutlinedInput-notchedOutline': {
+																			border: 'unset',
+																		},
+																	}}
+																/>
+															</Tooltip>
+															<Tooltip title='Archive board'>
+																<Checkbox
+																	checked={section.archived}
+																	onChange={() =>
+																		handleArchiveSection(
+																			section.id,
+																			section.archived
+																		)
+																	}
+																	icon={
+																		<ArchiveOutlinedIcon
+																			fontSize='small'
+																			color='info'
+																		/>
+																	}
+																	checkedIcon={
+																		<UnarchiveIcon
+																			color='success'
+																			fontSize='small'
+																		/>
+																	}
+																/>
+															</Tooltip>
+															<Tooltip title='Add task'>
+																<IconButton
+																	sx={{
+																		// color: 'gray',
+																		'&:hover': { color: 'green' },
+																	}}
+																	onClick={() => handleCreateTask(section.id)}
+																>
+																	<AddOutlinedIcon fontSize='small' />
+																</IconButton>
+															</Tooltip>
+															<Tooltip title='Delete section'>
+																<IconButton
+																	sx={{
+																		// color: 'gray',
+																		'&:hover': { color: 'red' },
+																	}}
+																	onClick={() =>
+																		window.confirm(
+																			'Are you sure you want to permanenly delete this section?'
+																		) && handleDeleteSection(section.id)
+																	}
+																>
+																	<DeleteForever fontSize='small' />
+																</IconButton>
+															</Tooltip>
 														</Box>
 														{/* tasks */}
 														{section.task.map((task, index) => (
-															<Draggable
+															<Tasks
 																key={task.id}
-																draggableId={task.id}
+																task={task}
 																index={index}
-															>
-																{(provided, snapshot) => (
-																	<Card
-																		ref={provided.innerRef}
-																		{...provided.draggableProps}
-																		{...provided.dragHandleProps}
-																		sx={{
-																			padding: '10px',
-																			marginBottom: '10px',
-																			cursor: snapshot.isDragging
-																				? 'grab'
-																				: 'pointer!important',
-																		}}
-																		onClick={() =>
-																			setSelectedTask({
-																				...task,
-																				sectionId: section.id,
-																			})
-																		}
-																	>
-																		<Typography>
-																			{task.title === ''
-																				? 'Untitled'
-																				: task.title}
-																		</Typography>
-																	</Card>
-																)}
-															</Draggable>
+																sectionId={section.id}
+																setSelectedTask={setSelectedTask}
+															/>
 														))}
 														{provided.placeholder}
 													</Box>
@@ -458,6 +540,7 @@ const Kanban = (props: SectionInterface) => {
 					onUpdate={taskUpdateHandler}
 					onDelete={taskDeleteHandler}
 					dimensions={dimensions}
+					toggleArchiveTask={toggleArchiveTask}
 				/>
 			)}
 		</>

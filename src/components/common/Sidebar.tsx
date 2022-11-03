@@ -18,12 +18,15 @@ import {
 	AccordionActions,
 	TextField,
 	Tooltip,
+	Checkbox,
 } from '@mui/material';
 
 import LogoutOutlinedIcon from '@mui/icons-material/LogoutOutlined';
 import AddBoxOutlinedIcon from '@mui/icons-material/AddBoxOutlined';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import FolderDeleteIcon from '@mui/icons-material/FolderDelete';
+import ArchiveOutlinedIcon from '@mui/icons-material/ArchiveOutlined';
+import UnarchiveIcon from '@mui/icons-material/Unarchive';
 
 import MenuIcon from '@mui/icons-material/Menu';
 
@@ -84,17 +87,19 @@ const FolderTitle = ({
 	};
 
 	return (
-		<TextField
-			inputProps={{ style: { fontSize: '.8rem' } }}
-			variant='standard'
-			value={folderTitle}
-			onChange={(e) => handleTitleChange(e)}
-		/>
+		<Tooltip title='Rename folder'>
+			<TextField
+				inputProps={{ style: { fontSize: '.8rem' } }}
+				variant='standard'
+				value={folderTitle}
+				onChange={(e) => handleTitleChange(e)}
+			/>
+		</Tooltip>
 	);
 };
 
 const Sidebar = () => {
-	const { data: session } = useSession();
+	const { data: session, status } = useSession();
 	const dispatch = useAppDispatch();
 	const sidebarWidth = 250;
 
@@ -104,6 +109,7 @@ const Sidebar = () => {
 	const activeBoard = useAppSelector((state) => state.activeBoard.value);
 	const folders = useAppSelector((state) => state.folders.value);
 	const favorites = useAppSelector((state) => state.favoritedBoards.value);
+	const isArchived = useAppSelector((state) => state.archived.value);
 
 	/* TRPC functions below vvv **/
 
@@ -131,6 +137,7 @@ const Sidebar = () => {
 	});
 	const folderPositionMutation = trpc.folder.updateFolderPosition.useMutation();
 	const folderDeleteMutation = trpc.folder.folderDelete.useMutation();
+	const folderArchiveMutation = trpc.folder.toggleArchived.useMutation();
 
 	const createBoard = async (folderId: string) => {
 		try {
@@ -196,11 +203,16 @@ const Sidebar = () => {
 
 	const onDragEnd = async (result: DropResult, folderId: string) => {
 		const { destination, source } = result;
-		console.log(result);
 
 		if (!destination) {
 			return;
 		}
+
+		if (
+			destination.droppableId === source.droppableId &&
+			source.index === destination.index
+		)
+			return;
 
 		// const newList = [...boards];
 		const newList = boards.filter((b) => b.folderId === folderId);
@@ -252,15 +264,23 @@ const Sidebar = () => {
 		////
 		const { destination, source } = results;
 		if (!destination) return;
-		console.log(destination);
-		console.log(source);
+		if (
+			destination.droppableId === source.droppableId &&
+			source.index === destination.index
+		)
+			return;
+
 		const foldersCopy = [...folders];
 		const removedFolder = foldersCopy.splice(source.index, 1);
 		if (removedFolder[0])
 			foldersCopy.splice(destination.index, 0, removedFolder[0]);
 		dispatch(setFolders(foldersCopy));
 
-		await folderPositionMutation.mutateAsync(foldersCopy);
+		try {
+			await folderPositionMutation.mutateAsync(foldersCopy);
+		} catch (error) {
+			console.log(error);
+		}
 	};
 
 	const folderDelete = async (folderId: string) => {
@@ -300,6 +320,29 @@ const Sidebar = () => {
 		}
 	};
 
+	const handleArchiveFolder = async (folderId: string, archived: boolean) => {
+		///
+		const newFolders = folders.map((f) =>
+			f.id === folderId ? { ...f, archived: !f.archived } : f
+		);
+		dispatch(setFolders(newFolders));
+
+		try {
+			await folderArchiveMutation.mutateAsync({
+				folderId,
+				prevStatus: archived,
+			});
+		} catch (e) {
+			console.log(e);
+		}
+
+		// const currentFolder = folders.find((f) => f.id === folderId);
+		// if (currentFolder?.Board.some((b) => b.id === activeBoard) && !archived) {
+		// 	const currentBoards = currentFolder.Board.filter((b) => !b.archived);
+		// 	dispatch(setActiveBoard(currentBoards[0].id));
+		// }
+	};
+
 	return (
 		<>
 			{' '}
@@ -323,6 +366,7 @@ const Sidebar = () => {
 					'& > div': {
 						borderRight: 'none',
 					},
+					boxShadow: dimensions.width > 600 ? 4 : 0,
 				}}
 			>
 				<List
@@ -346,9 +390,11 @@ const Sidebar = () => {
 							<Typography variant='body2' fontWeight={700}>
 								{session?.user?.name}
 							</Typography>
-							<IconButton onClick={() => signOut()}>
-								<LogoutOutlinedIcon fontSize='small' />
-							</IconButton>
+							<Tooltip title='Sign out'>
+								<IconButton onClick={() => signOut()}>
+									<LogoutOutlinedIcon fontSize='small' />
+								</IconButton>
+							</Tooltip>
 						</Box>
 					</ListItem>
 					{/** FAVORITES */}
@@ -357,23 +403,36 @@ const Sidebar = () => {
 
 					<Box sx={{ pt: '10px' }}>
 						{/** THIRD ROW =  ADD BUTTON AND PRIVATE TEXT */}
-						<ListItem>
+						<ListItem
+							sx={{
+								display: 'flex',
+								flexDirection: 'column',
+								borderBottom: 'grey 2px solid',
+								marginBottom: 3,
+							}}
+						>
 							<Box
 								sx={{
 									width: '100%',
 									display: 'flex',
 									justifyContent: 'space-between',
 									alignItems: 'center',
-									borderBottom: 'grey 2px solid',
-									marginBottom: 3,
 								}}
 							>
 								<Typography variant='body2' fontWeight={700}>
 									{'Own Folders <- Boards'}
 								</Typography>
-								<IconButton onClick={() => createFolder()}>
-									<AddBoxOutlinedIcon fontSize='small' />
-								</IconButton>
+								<Tooltip title='Create folder'>
+									<IconButton onClick={() => createFolder()}>
+										<AddBoxOutlinedIcon fontSize='small' />
+									</IconButton>
+								</Tooltip>
+							</Box>
+							<Box sx={{ width: '100%', textAlign: 'right' }}>
+								<Typography variant='body2' fontSize={10} fontWeight={700}>
+									{folders.length} Folders -{' '}
+									{folders.filter((f) => !f.archived).length} Not-Archived
+								</Typography>
 							</Box>
 						</ListItem>
 
@@ -388,138 +447,174 @@ const Sidebar = () => {
 												index={index}
 											>
 												{(provided, snapshot) => (
-													<Accordion
-														ref={provided.innerRef}
-														{...provided.draggableProps}
+													<Tooltip
+														title={` ${
+															boards.filter((b) => b.folderId === folder.id)
+																.length
+														} Boards - ${
+															boards.filter(
+																(b) => b.folderId === folder.id && !b.archived
+															).length
+														}  Not-Archived`}
 													>
-														<AccordionSummary
-															{...provided.dragHandleProps}
-															expandIcon={<ExpandMoreIcon />}
+														<Accordion
+															ref={provided.innerRef}
+															{...provided.draggableProps}
 															sx={{
-																bgcolor: folder.Board.some(
-																	(b) => b.id === activeBoard
-																)
-																	? 'grey.800'
-																	: 'grey:900',
+																display:
+																	folder.archived && !isArchived.folders
+																		? 'none'
+																		: 'block',
 															}}
 														>
-															<Typography
+															<AccordionSummary
+																{...provided.dragHandleProps}
+																expandIcon={<ExpandMoreIcon />}
 																sx={{
-																	whiteSpace: 'nowrap',
-																	overflow: 'hidden',
-																	textOverflow: 'ellipsis',
-																	fontWeight: 700,
-																	width: 190,
-																	fontSize: '.9rem',
+																	bgcolor: folder.Board.some(
+																		(b) => b.id === activeBoard
+																	)
+																		? 'grey.800'
+																		: 'grey:900',
 																}}
 															>
-																{folder.name}
-															</Typography>
-														</AccordionSummary>
-														<AccordionActions
-															sx={{
-																padding: '0 10px',
-																display: 'flex',
-																justifyContent: 'space-between',
-															}}
-														>
-															<FolderTitle
-																currentTitle={folder.name}
-																folderId={folder.id}
-															/>
-															<Box sx={{ display: 'flex' }}>
-																<IconButton
-																	onClick={() =>
-																		confirm(
-																			'Are you sure you want to delete the folder?'
-																		) &&
-																		confirm(
-																			"This action will permanently delete the folder and it's contents"
-																		) &&
-																		folderDelete(folder.id)
+																<Typography
+																	sx={{
+																		whiteSpace: 'nowrap',
+																		overflow: 'hidden',
+																		textOverflow: 'ellipsis',
+																		fontWeight: 700,
+																		width: 190,
+																		fontSize: '.9rem',
+																	}}
+																>
+																	{folder.name ? folder.name : 'Untitled'}
+																</Typography>
+															</AccordionSummary>
+															<AccordionActions
+																sx={{
+																	padding: '0 10px',
+																	display: 'flex',
+																	justifyContent: 'space-between',
+																}}
+															>
+																<FolderTitle
+																	currentTitle={folder.name}
+																	folderId={folder.id}
+																/>
+																<Box sx={{ display: 'flex' }}>
+																	<Tooltip title='Archive folder'>
+																		<Checkbox
+																			icon={<ArchiveOutlinedIcon />}
+																			checkedIcon={<UnarchiveIcon />}
+																			size='small'
+																			checked={folder.archived}
+																			onChange={() =>
+																				handleArchiveFolder(
+																					folder.id,
+																					folder.archived
+																				)
+																			}
+																		/>
+																	</Tooltip>
+																	<IconButton
+																		onClick={() =>
+																			confirm(
+																				'Are you sure you want to delete the folder?'
+																			) &&
+																			confirm(
+																				"This action will permanently delete the folder and it's contents"
+																			) &&
+																			folderDelete(folder.id)
+																		}
+																	>
+																		<Tooltip title='Permanently delete folder'>
+																			<FolderDeleteIcon fontSize='small' />
+																		</Tooltip>
+																	</IconButton>
+																	<IconButton
+																		onClick={() => createBoard(folder.id)}
+																	>
+																		<Tooltip title='Add board to current folder'>
+																			<AddBoxOutlinedIcon fontSize='small' />
+																		</Tooltip>
+																	</IconButton>
+																</Box>
+															</AccordionActions>
+															<AccordionDetails sx={{ padding: '5px 0' }}>
+																<DragDropContext
+																	onDragEnd={(dragResult) =>
+																		onDragEnd(dragResult, folder.id)
 																	}
 																>
-																	<Tooltip title='Permanently delete folder'>
-																		<FolderDeleteIcon fontSize='small' />
-																	</Tooltip>
-																</IconButton>
-																<IconButton
-																	onClick={() => createBoard(folder.id)}
-																>
-																	<Tooltip title='Add board to current folder'>
-																		<AddBoxOutlinedIcon fontSize='small' />
-																	</Tooltip>
-																</IconButton>
-															</Box>
-														</AccordionActions>
-														<AccordionDetails sx={{ padding: '5px 0' }}>
-															<DragDropContext
-																onDragEnd={(dragResult) =>
-																	onDragEnd(dragResult, folder.id)
-																}
-															>
-																<Droppable
-																	key={'list-board-droppable-key'}
-																	droppableId={'list-board-droppable'}
-																>
-																	{(provided) => (
-																		<div
-																			ref={provided.innerRef}
-																			{...provided.droppableProps}
-																		>
-																			{boards
-																				?.filter(
-																					(board) =>
-																						board.folderId === folder.id
-																				)
-																				?.map((item, index) => (
-																					<Draggable
-																						key={item.id}
-																						draggableId={item.id}
-																						index={index}
-																					>
-																						{(provided, snapshot) => (
-																							<ListItemButton
-																								ref={provided.innerRef}
-																								{...provided.dragHandleProps}
-																								{...provided.draggableProps}
-																								selected={
-																									item.id === activeBoard
-																								}
-																								sx={{
-																									pl: '20px',
-																									cursor: snapshot.isDragging
-																										? 'grab'
-																										: 'pointer!important',
-																								}}
-																								onClick={() =>
-																									dispatch(
-																										setActiveBoard(item.id)
-																									)
-																								}
-																							>
-																								<Typography
-																									variant='body2'
-																									fontWeight='700'
+																	<Droppable
+																		key={'list-board-droppable-key'}
+																		droppableId={'list-board-droppable'}
+																	>
+																		{(provided) => (
+																			<div
+																				ref={provided.innerRef}
+																				{...provided.droppableProps}
+																			>
+																				{boards
+																					?.filter(
+																						(board) =>
+																							board.folderId === folder.id
+																					)
+																					?.map((item, index) => (
+																						<Draggable
+																							key={item.id}
+																							draggableId={item.id}
+																							index={index}
+																						>
+																							{(provided, snapshot) => (
+																								<ListItemButton
+																									ref={provided.innerRef}
+																									{...provided.dragHandleProps}
+																									{...provided.draggableProps}
+																									selected={
+																										item.id === activeBoard
+																									}
 																									sx={{
-																										whiteSpace: 'nowrap',
-																										overflow: 'hidden',
-																										textOverflow: 'ellipsis',
+																										display:
+																											item.archived &&
+																											!isArchived.boards
+																												? 'none'
+																												: '',
+																										pl: '20px',
+																										cursor: snapshot.isDragging
+																											? 'grab'
+																											: 'pointer!important',
 																									}}
+																									onClick={() =>
+																										dispatch(
+																											setActiveBoard(item.id)
+																										)
+																									}
 																								>
-																									{item.icon} {item.title}
-																								</Typography>
-																							</ListItemButton>
-																						)}
-																					</Draggable>
-																				))}
-																			{provided.placeholder}
-																		</div>
-																	)}
-																</Droppable>
-															</DragDropContext>
-														</AccordionDetails>
-													</Accordion>
+																									<Typography
+																										variant='body2'
+																										fontWeight='700'
+																										sx={{
+																											whiteSpace: 'nowrap',
+																											overflow: 'hidden',
+																											textOverflow: 'ellipsis',
+																										}}
+																									>
+																										{item.icon} {item.title}
+																									</Typography>
+																								</ListItemButton>
+																							)}
+																						</Draggable>
+																					))}
+																				{provided.placeholder}
+																			</div>
+																		)}
+																	</Droppable>
+																</DragDropContext>
+															</AccordionDetails>
+														</Accordion>
+													</Tooltip>
 												)}
 											</Draggable>
 										))}

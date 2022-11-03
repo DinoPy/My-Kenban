@@ -4,7 +4,7 @@ generator client {
 }
 
 datasource db {
-  provider             = "sqlite"
+  provider             = "mysql"
   url                  = env("DATABASE_URL")
   referentialIntegrity = "prisma"
 }
@@ -17,6 +17,7 @@ model Folder {
   User         UserSchema @relation(fields: [userSchemaId], references: [id], onDelete: Cascade)
   Board        Board[]
 
+  archived  Boolean  @default(false)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
@@ -34,40 +35,46 @@ model UserSchema {
 }
 
 model Board {
-  id               String     @id @default(cuid())
-  title            String     @default("Untitled")
-  icon             String     @default("⛩")
-  description      String     @default("Add description here, \n You can add multiline description \n start now!")
-  position         Int        @default(0)
-  favorite         Boolean    @default(false)
-  favoritePosition Int        @default(0)
-  createdAt        DateTime   @default(now())
-  updatedAt        DateTime   @updatedAt
-  userId           String
-  user             UserSchema @relation(fields: [userId], references: [id], onDelete: Cascade)
-  Section          Section[]
-  folder           Folder     @relation(fields: [folderId], references: [id], onDelete: Cascade)
-  folderId         String
+  id               String   @id @default(cuid())
+  title            String   @default("Untitled")
+  icon             String   @default("⛩")
+  description      String   @default("Add description here, \n You can add multiline description \n start now!")
+  position         Int      @default(0)
+  favorite         Boolean  @default(false)
+  favoritePosition Int      @default(0)
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  archived Boolean    @default(false)
+  userId   String
+  user     UserSchema @relation(fields: [userId], references: [id], onDelete: Cascade)
+  Section  Section[]
+  folder   Folder     @relation(fields: [folderId], references: [id], onDelete: Cascade)
+  folderId String
 }
 
 model Section {
-  id        String   @id @default(cuid())
-  title     String   @default("")
-  boardId   String
-  board     Board    @relation(fields: [boardId], references: [id], onDelete: Cascade)
-  task      Task[]
-  position  Int      @default(0)
+  id       String @id @default(cuid())
+  title    String @default("")
+  boardId  String
+  board    Board  @relation(fields: [boardId], references: [id], onDelete: Cascade)
+  task     Task[]
+  position Int    @default(0)
+
+  archived  Boolean  @default(false)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
 
 model Task {
-  id        String   @id @default(cuid())
-  title     String   @default("")
-  content   String   @default("You can add description here") // @db.Text
-  position  Int      @default(0)
+  id        String  @id @default(cuid())
+  title     String  @default("")
+  content   String  @default("You can add description here") @db.Text
+  position  Int     @default(0)
   sectionId String
-  section   Section  @relation(fields: [sectionId], references: [id], onDelete: Cascade)
+  section   Section @relation(fields: [sectionId], references: [id], onDelete: Cascade)
+
+  archived  Boolean  @default(false)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }

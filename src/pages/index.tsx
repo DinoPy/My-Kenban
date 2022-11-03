@@ -13,7 +13,10 @@ import Board from '../components/Board';
 import { setActiveBoard } from '../redux/features/activeBoardSlice';
 import { folderSlice, setFolders } from '../redux/features/folderSlice';
 
-const Home: NextPage = () => {
+const Home: NextPage<{
+	setThemeValue: (val: boolean) => void;
+	themeValue: boolean;
+}> = ({ setThemeValue, themeValue }) => {
 	const dispatch = useAppDispatch();
 	const boards = useAppSelector((state) => state.board.value);
 	const folders = useAppSelector((state) => state.folders.value);
@@ -65,7 +68,7 @@ const Home: NextPage = () => {
 					</LoadingButton>
 				</Box>
 			) : (
-				<Board />
+				<Board setThemeValue={setThemeValue} themeValue={themeValue} />
 			)}
 		</AppLayout>
 	);

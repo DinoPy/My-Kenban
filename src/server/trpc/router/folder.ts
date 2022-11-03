@@ -8,6 +8,7 @@ export const folderReturn = {
 	name: true,
 	userSchemaId: true,
 	position: true,
+	archived: true,
 	Board: {
 		select: boardReturn,
 	},
@@ -23,9 +24,11 @@ export const folderRouter = t.router({
 		.mutation(async ({ ctx, input }) => {
 			try {
 				// create the folder without the board content
+				const folderCount = await ctx.prisma.folder.count();
 				const folder = await ctx.prisma.folder.create({
 					data: {
 						userSchemaId: input.userId,
+						position: folderCount,
 
 						Board: {
 							create: {
@@ -148,6 +151,25 @@ export const folderRouter = t.router({
 				throw new TRPCError({
 					message: 'There was an error',
 					code: 'BAD_REQUEST',
+				});
+			}
+		}),
+	toggleArchived: t.procedure
+		.input(z.object({ folderId: z.string(), prevStatus: z.boolean() }))
+		.mutation(async ({ ctx, input }) => {
+			try {
+				const folder = await ctx.prisma.folder.update({
+					where: {
+						id: input.folderId,
+					},
+					data: {
+						archived: !input.prevStatus,
+					},
+				});
+			} catch (e) {
+				throw new TRPCError({
+					message: JSON.stringify(e),
+					code: 'INTERNAL_SERVER_ERROR',
 				});
 			}
 		}),

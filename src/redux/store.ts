@@ -3,6 +3,7 @@ import boardReducer from './features/boardSlice';
 import activeBoardReducer from './features/activeBoardSlice';
 import favoritedBoardReducer from './features/favoritedBoardsSlice';
 import folderReducer from './features/folderSlice';
+import archivedReducer from './features/archivedSlice';
 
 export const store = configureStore({
 	reducer: {
@@ -10,6 +11,7 @@ export const store = configureStore({
 		activeBoard: activeBoardReducer,
 		favoritedBoards: favoritedBoardReducer,
 		folders: folderReducer,
+		archived: archivedReducer,
 	},
 });
 

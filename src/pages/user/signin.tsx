@@ -15,6 +15,10 @@ function SignIn() {
 	const { data: session, status } = useSession();
 	const router = useRouter();
 
+	React.useEffect(() => {
+		if (session && status === 'authenticated') router.push('/');
+	});
+
 	const handleSignIn = async (event: React.FormEvent<HTMLFormElement>) => {
 		event.preventDefault();
 		setEmailErr('');
@@ -50,7 +54,6 @@ function SignIn() {
 				break;
 			}
 			case false: {
-				console.log(res);
 				if (res?.error?.includes('Email does not exist')) {
 					setEmailErr('Email does not exist');
 				} else if (res?.error?.includes('Incorrect password')) {
@@ -124,7 +127,7 @@ function SignIn() {
 						Signin with Discord
 					</Button> */}
 					<Button
-						onClick={() => signIn('google', { redirect: false })}
+						onClick={() => signIn('google', { redirect: true })}
 						variant='outlined'
 						sx={{ ml: 2 }}
 					>

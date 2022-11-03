@@ -38,7 +38,6 @@ export const authOptions: NextAuthOptions = {
 			return true;
 		},
 		async jwt({ token, user }) {
-			console.log(token.email);
 			const foundUser = await prisma.userSchema.findFirst({
 				where: {
 					email: String(token?.email),
@@ -109,7 +108,6 @@ export const authOptions: NextAuthOptions = {
 					if (valid) {
 						return toReturnUser;
 					} else {
-						console.log('here');
 						throw new Error(
 							'Incorrect password OR this email was registred with google'
 						);
@@ -126,6 +124,9 @@ export const authOptions: NextAuthOptions = {
 	session: {
 		strategy: 'jwt',
 	},
+	// jwt: {
+	// 	maxAge: 1,
+	// },
 
 	pages: {
 		signIn: '/user/signin',

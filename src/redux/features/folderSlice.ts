@@ -1,4 +1,5 @@
 import { createSlice } from '@reduxjs/toolkit';
+import { boolean } from 'zod';
 
 interface folderInterface {
 	value:
@@ -7,6 +8,7 @@ interface folderInterface {
 				name: string;
 				userSchemaId: string;
 				position: number;
+				archived: boolean;
 				Board: {
 					id: string;
 					title: string;
@@ -18,6 +20,7 @@ interface folderInterface {
 					createdAt: string;
 					userId: string;
 					folderId: string;
+					archived: boolean;
 				}[];
 		  }[]
 		| [];

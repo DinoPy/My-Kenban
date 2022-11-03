@@ -6,6 +6,7 @@ const sectionReturn = {
 	id: true,
 	title: true,
 	position: true,
+	archived: true,
 	task: {
 		select: {
 			id: true,
@@ -13,6 +14,7 @@ const sectionReturn = {
 			content: true,
 			position: true,
 			createdAt: true,
+			archived: true,
 		},
 	},
 };
@@ -87,7 +89,6 @@ export const sectionRouter = t.router({
 			////
 
 			for (const index in input) {
-				console.log(index);
 				await ctx.prisma.section.update({
 					where: {
 						id: input[index]?.id,
@@ -102,6 +103,27 @@ export const sectionRouter = t.router({
 				throw new TRPCError({
 					message: JSON.stringify(e),
 					code: 'BAD_REQUEST',
+				});
+			}
+		}),
+
+	archiveSection: t.procedure
+		.input(z.object({ sectionId: z.string(), archived: z.boolean() }))
+		.mutation(async ({ ctx, input }) => {
+			try {
+				const section = await ctx.prisma.section.update({
+					where: {
+						id: input.sectionId,
+					},
+					data: {
+						archived: !input.archived,
+					},
+				});
+				return { message: 'success' };
+			} catch (e) {
+				throw new TRPCError({
+					message: JSON.stringify(e),
+					code: 'INTERNAL_SERVER_ERROR',
 				});
 			}
 		}),

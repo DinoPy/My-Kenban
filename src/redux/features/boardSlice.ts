@@ -12,6 +12,7 @@ export interface boardInterface {
 				favoritePosition: number;
 				createdAt: string;
 				userId: string;
+				archived: boolean;
 				folderId: string;
 		  }[]
 		| [];

@@ -19,20 +19,121 @@ import { ThemeProvider, createTheme } from '@mui/material/styles';
 
 import { store } from '../redux/store';
 import { Provider } from 'react-redux';
-
-const theme = createTheme({
-	palette: {
-		mode: 'dark',
-		// background: {
-		// 	paper: '#1e1e1e',
-		// },
-	},
-});
+import { amber } from '@mui/material/colors';
+import { useState, useEffect } from 'react';
 
 const MyApp: AppType<{ session: Session | null }> = ({
 	Component,
 	pageProps: { session, ...pageProps },
 }) => {
+	const [themeValue, setThemeValue] = useState(true);
+
+	const theme = createTheme({
+		// palette: {
+		// 	mode: 'dark',
+		// },
+		...(themeValue === true
+			? {
+					palette: {
+						mode: 'dark',
+					},
+
+					// palette: {
+					// 	// mode: 'dark',
+
+					// 	primary: {
+					// 		main: amber.A700,
+					// 		'100': '#f00',
+					// 		contrastText: '#fff',
+					// 		// dark: '#000',
+					// 		// light: '#000',
+					// 	},
+					// 	common: {},
+					// 	warning: { main: amber.A700 },
+					// 	action: {
+					// 		// default icons color v
+					// 		active: '#000',
+					// 		// selected: 'rgba(0,0,0,0.1)',
+
+					// 		selectedOpacity: 0.1,
+					// 		activatedOpacity: 0.8,
+					// 	},
+					// 	grey: {
+					// 		900: amber.A400,
+					// 		'800': amber[100],
+					// 		// '50': '#000',
+					// 		// '100': '#000',
+					// 		// A100: '#000',
+					// 		// A200: '#000',
+					// 		// A400: '#000',
+					// 		// A700: '#000',
+					// 		// '200': '#000',
+					// 		// '300': '#000',
+					// 	},
+
+					// 	background: {
+					// 		default: amber.A700,
+					// 		paper: amber[300],
+					// 	},
+					// 	text: {
+					// 		primary: '#252525',
+					// 		secondary: '#000',
+					// 		disabled: '#000',
+					// 	},
+					// },
+					// // components: {
+					// // 	MuiIcon: {
+					// // 		styleOverrides: {
+					// // 			root: 'amber',
+					// // 		},
+					// // 	},
+					// // },
+			  }
+			: {
+					palette: {
+						mode: 'light',
+						grey: {
+							900: amber.A100, //
+							800: amber[300],
+						},
+						background: {
+							default: amber[50],
+							paper: amber[100],
+						},
+						action: {
+							active: '#252525',
+							selected: '#fff',
+							// selectedOpacity: 0.6,
+						},
+
+						primary: { main: amber[900] },
+					},
+					components: {
+						MuiListItemButton: {
+							styleOverrides: {
+								root: {
+									'&.Mui-selected': {
+										backgroundColor: amber[300],
+										'&:hover': {
+											backgroundColor: `${amber[300]}80`,
+										},
+									},
+								},
+							},
+						},
+					},
+			  }),
+	});
+
+	useEffect(() => {
+		const themeToggle = localStorage.getItem('themeToggled');
+		if (themeToggle === null) {
+			localStorage.setItem('themeToggled', 'true');
+		} else {
+			setThemeValue(JSON.parse(themeToggle));
+		}
+	}, []);
+
 	return (
 		<>
 			<Head>
@@ -44,8 +145,12 @@ const MyApp: AppType<{ session: Session | null }> = ({
 			<Provider store={store}>
 				<ThemeProvider theme={theme}>
 					<CssBaseLine />
-					<SessionProvider session={session}>
-						<Component {...pageProps} />
+					<SessionProvider session={session} refetchInterval={1800}>
+						<Component
+							{...pageProps}
+							setThemeValue={setThemeValue}
+							themeValue={themeValue}
+						/>
 					</SessionProvider>
 				</ThemeProvider>
 			</Provider>
