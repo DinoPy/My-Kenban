@@ -1,3 +1,4 @@
+import { imageRouter } from './imageUpload';
 import { folderRouter } from './folder';
 import { taskRouter } from './task';
 // src/server/trpc/router/index.ts
@@ -12,6 +13,7 @@ export const appRouter = t.router({
 	section: sectionRouter,
 	task: taskRouter,
 	folder: folderRouter,
+	imageUpload: imageRouter,
 });
 
 // export type definition of API

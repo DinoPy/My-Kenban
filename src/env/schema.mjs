@@ -15,6 +15,9 @@ export const serverSchema = z.object({
 	SECRET_PASSWORD: z.string(),
 	GOOGLE_CLIENT_ID: z.string(),
 	GOOGLE_CLIENT_SECRET: z.string(),
+	S3_KEY: z.string(),
+	S3_SECRET: z.string(),
+	S3_REGION: z.string(),
 });
 
 /**

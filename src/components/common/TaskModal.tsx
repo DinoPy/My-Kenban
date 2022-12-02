@@ -42,7 +42,7 @@ const modalStyle = {
 	position: 'absolute',
 	top: '50%',
 	left: '50%',
-	width: '50%',
+	width: '65%',
 	transform: 'translate(-50%, -50%)',
 	bgcolor: 'background.paper',
 	// border: '0px solid #000',

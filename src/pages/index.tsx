@@ -11,7 +11,7 @@ import { trpc } from '../utils/trpc';
 import { useSession } from 'next-auth/react';
 import Board from '../components/Board';
 import { setActiveBoard } from '../redux/features/activeBoardSlice';
-import { folderSlice, setFolders } from '../redux/features/folderSlice';
+import { setFolders } from '../redux/features/folderSlice';
 
 const Home: NextPage<{
 	setThemeValue: (val: boolean) => void;
