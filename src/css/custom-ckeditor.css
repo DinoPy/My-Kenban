@@ -1,5 +1,6 @@
 :root {
 	--ck-color-split-button-hover-background: '#fff' !important;
+	--hr-line-color: '#605e5e5c';
 }
 
 .ck.ck-editor {
@@ -40,6 +41,26 @@
 .ck.ck-dropdown__panel,
 .ck.ck-toolbar {
 	background: rgb(218, 212, 194) !important;
+	z-index: 100000 !important;
+}
+
+/* .ck .ck-balloon-panel {
+	z-index: 100000000 !important;
+} */
+
+a {
+	color: hsl(212, 100%, 29%) !important;
+}
+
+.ck-content hr {
+	background: #605e5e5c !important;
+	height: 2px !important;
+}
+
+pre {
+	background: #212733 !important;
+	color: rgba(255, 255, 255, 0.842) !important;
+	border: 1px solid hsl(193, 100%, 10%) !important;
 }
 
 /* .ck.ck-editor__main > .ck-editor__editable.ck-focused {
@@ -58,7 +79,6 @@
 	/* background-color: transparent !important; */
 	border: none !important;
 	border-bottom: 2px solid #2525258c !important;
-	margin-bottom: 1em;
 }
 
 /* .ck.ck-button,

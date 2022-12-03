@@ -25,12 +25,7 @@ const CKEdit = ({
 		};
 	}
 
-	// 	export interface PluginInterface<T = Plugin> {
-	//     new (editor: Editor): T;
-	//     init?(): Promise<void> | void;
-	//     afterInit?(): Promise<void> | void;
-	//     destroy?(): Promise<void> | void;
-	// }
+	// THE ckEDITOR VERSION ISNTALLED HAS IMG REMOVAR PLUGIN, KEEP TESTING OR REMOVE IT
 
 	class MyUploadAdapter {
 		loader: FileLoader;
@@ -82,6 +77,21 @@ const CKEdit = ({
 			///
 		}
 	}
+
+	// Editor.create(document.querySelector('#editor'), {
+	// 	//...
+	// 	imageRemoveEvent: {
+	// 		additionalElementTypes: null, // Add additional element types to invoke callback events. Default is null and it's not required. Already included ['image','imageBlock','inlineImage']
+	// 		// additionalElementTypes: ['image', 'imageBlock', 'inlineImage'], // Demo to write additional element types
+	// 		callback: (imagesSrc, nodeObjects) => {
+	// 			// note: imagesSrc is array of src & nodeObjects is array of nodeObject
+	// 			// node object api: https://ckeditor.com/docs/ckeditor5/latest/api/module_engine_model_node-Node.html
+
+	// 			console.log('callback called', imagesSrc, nodeObjects);
+	// 		},
+	// 	},
+	// 	// ...
+	// });
 
 	return (
 		<CKEditor

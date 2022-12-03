@@ -362,11 +362,12 @@ const Sidebar = () => {
 				onClose={() => setSideBarOpen(false)}
 				sx={{
 					width: sidebarWidth,
-					height: '100vh',
+					height: 'min(100vh, 100%)',
 					'& > div': {
 						borderRight: 'none',
 					},
 					boxShadow: dimensions.width > 600 ? 4 : 0,
+					zIndex: 0,
 				}}
 			>
 				<List
