@@ -1,14 +1,11 @@
 import DeleteForever from '@mui/icons-material/DeleteForever';
 import CloseIcon from '@mui/icons-material/Close';
 import {
-	Backdrop,
 	Box,
 	Checkbox,
 	Divider,
-	Drawer,
 	Fade,
 	IconButton,
-	Modal,
 	Switch,
 	TextField,
 	Tooltip,
@@ -21,7 +18,6 @@ import Moment from 'moment';
 import { TaskInterface } from './Kanban';
 import { trpc } from '../../utils/trpc';
 import dynamic from 'next/dynamic';
-import { relative } from 'path';
 
 const CKEditor = dynamic(() => import('./CKEditor'), { ssr: false });
 
@@ -58,7 +54,6 @@ const modalStyle = {
 
 const notMaximizedStyle = {
 	width: '65%',
-	// position: 'relative',
 	height: '80%',
 	bgcolor: 'background.paper',
 	p: 1,
@@ -94,7 +89,7 @@ const TaskModal = (props: TaskModalInterface) => {
 		setContent(props.task !== undefined ? props.task.content : '');
 	}, [props.task]);
 
-	React.useEffect(() => {
+	useEffect(() => {
 		window.addEventListener('keydown', (e) => {
 			if (e.key === 'Escape') onClose();
 		});
@@ -181,7 +176,8 @@ const TaskModal = (props: TaskModalInterface) => {
 	}`;
 
 	return (
-		<Box
+		<div
+
 		// open={task !== undefined}
 		// closeAfterTransition
 		// BackdropComponent={Backdrop}
@@ -295,7 +291,7 @@ const TaskModal = (props: TaskModalInterface) => {
 					</Box>
 				</Box>
 			</Fade>
-		</Box>
+		</div>
 	);
 };
 

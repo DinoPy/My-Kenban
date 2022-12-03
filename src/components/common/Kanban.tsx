@@ -482,27 +482,27 @@ const Kanban = (props: SectionInterface) => {
 																/>
 															</Tooltip>
 															<Tooltip title='Archive board'>
-																<Checkbox
-																	checked={section.archived}
-																	onChange={() =>
+																<IconButton
+																	// checked={section.archived}
+																	onClick={() =>
 																		handleArchiveSection(
 																			section.id,
 																			section.archived
 																		)
 																	}
-																	icon={
+																>
+																	{section.archived ? (
+																		<UnarchiveIcon
+																			fontSize='small'
+																			color='success'
+																		/>
+																	) : (
 																		<ArchiveOutlinedIcon
 																			fontSize='small'
 																			color='info'
 																		/>
-																	}
-																	checkedIcon={
-																		<UnarchiveIcon
-																			color='success'
-																			fontSize='small'
-																		/>
-																	}
-																/>
+																	)}
+																</IconButton>
 															</Tooltip>
 
 															<Tooltip title='Add task'>
