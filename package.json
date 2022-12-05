@@ -29,6 +29,7 @@
     "aws-sdk": "^2.1264.0",
     "axios": "^0.27.2",
     "bcryptjs": "^2.4.3",
+    "browser-image-compression": "^2.0.0",
     "ckeditor5-custom-build": "file:./ckeditor5",
     "emoji-mart": "3.0.1",
     "moment": "^2.29.4",

@@ -53,7 +53,7 @@ const modalStyle = {
 };
 
 const notMaximizedStyle = {
-	width: '65%',
+	width: '70%',
 	height: '80%',
 	bgcolor: 'background.paper',
 	p: 1,
@@ -90,9 +90,13 @@ const TaskModal = (props: TaskModalInterface) => {
 	}, [props.task]);
 
 	useEffect(() => {
-		window.addEventListener('keydown', (e) => {
+		const cbFunct = (e: KeyboardEvent) => {
 			if (e.key === 'Escape') onClose();
-		});
+		};
+		window.addEventListener('keydown', cbFunct);
+		return () => {
+			window.removeEventListener('keydown', cbFunct);
+		};
 	}, []);
 
 	const onClose = () => {
