@@ -273,8 +273,7 @@ const TaskModal = (props: TaskModalInterface) => {
 								sx={{
 									height: '100%',
 									border: '1px #252525 solid',
-									overflowX: 'hidden',
-									overflowY: 'hidden',
+									overflow: 'hidden',
 								}}
 							>
 								<CKEditor content={content} onUpdateContent={onUpdateContent} />

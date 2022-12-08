@@ -8,9 +8,13 @@
 	max-height: fit-content !important;
 }
 
-/* .ck.ck-toolbar__items {
-	z-index: 100 in !important;
-} */
+.ck .ck-editor__top {
+	position: absolute !important;
+	top: 0;
+	right: 0;
+	left: 0;
+	z-index: 100;
+}
 
 .ck-editor__editable {
 	height: 101% !important;
@@ -20,6 +24,8 @@
 .ck .ck-editor__main {
 	height: 100% !important;
 	max-height: fit-content !important;
+	overflow-y: hidden !important;
+	padding-top: 41px;
 }
 
 .ck.ck-editor__main > .ck-editor__editable {
