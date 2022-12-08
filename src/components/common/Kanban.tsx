@@ -4,6 +4,7 @@ import {
 	Button,
 	Card,
 	Checkbox,
+	CircularProgress,
 	Divider,
 	IconButton,
 	TextField,
@@ -25,6 +26,8 @@ import {
 import { trpc } from '../../utils/trpc';
 import TaskModal from './TaskModal';
 import Tasks from './Tasks';
+import Loading from './Loading';
+import { LoadingButton } from '@mui/lab';
 
 let timer: NodeJS.Timeout;
 const cooldown = 500;
@@ -74,13 +77,26 @@ const Kanban = (props: SectionInterface) => {
 	const updateTaskPositionMutation = trpc.task.updatePosition.useMutation();
 	const toggleTaskArchiveMutation = trpc.task.toggleArchived.useMutation();
 
+	const [isLoading, setIsLoading] = React.useState(false);
+
 	React.useEffect(() => {
 		setSections(props.sections);
 	}, [props.sections]);
 
+	React.useEffect(() => {
+		if (selectedTask === undefined) {
+			window.document.body.style.overflowY = 'auto';
+		} else {
+			window.document.body.scrollIntoView();
+			window.document.body.style.overflowY = 'hidden';
+		}
+	}, [selectedTask]);
+
 	//-------------------------------------SECTION-------------------------------------//
 	const handleAddSection = async () => {
 		///
+
+		setIsLoading(true);
 		try {
 			const newSection = await addSectionMutation.mutateAsync({
 				boardId: activeBoard,
@@ -89,6 +105,8 @@ const Kanban = (props: SectionInterface) => {
 		} catch (e) {
 			console.log(e);
 		}
+
+		setIsLoading(false);
 	};
 
 	const handleDeleteSection = async (id: string) => {
@@ -143,6 +161,7 @@ const Kanban = (props: SectionInterface) => {
 
 	const handleCreateTask = async (sectionId: string) => {
 		///
+		setIsLoading(true);
 		try {
 			const newTask = await addTaskMutation.mutateAsync({
 				sectionId,
@@ -155,6 +174,7 @@ const Kanban = (props: SectionInterface) => {
 					return t;
 				})
 			);
+			setIsLoading(false);
 		} catch (e) {
 			console.log(e);
 		}
@@ -343,7 +363,7 @@ const Kanban = (props: SectionInterface) => {
 		return () => {
 			window.removeEventListener('resize', effectCB);
 		};
-	});
+	}, []);
 
 	return (
 		<>
@@ -354,7 +374,9 @@ const Kanban = (props: SectionInterface) => {
 					justifyContent: 'space-between',
 				}}
 			>
-				<Button onClick={handleAddSection}>Add section</Button>
+				<LoadingButton onClick={handleAddSection} loading={isLoading}>
+					Add section
+				</LoadingButton>
 				<Typography variant='body2' fontWeight={700}>
 					{' '}
 					{sections.length} Sections -{' '}
@@ -460,28 +482,29 @@ const Kanban = (props: SectionInterface) => {
 																/>
 															</Tooltip>
 															<Tooltip title='Archive board'>
-																<Checkbox
-																	checked={section.archived}
-																	onChange={() =>
+																<IconButton
+																	// checked={section.archived}
+																	onClick={() =>
 																		handleArchiveSection(
 																			section.id,
 																			section.archived
 																		)
 																	}
-																	icon={
+																>
+																	{section.archived ? (
+																		<UnarchiveIcon
+																			fontSize='small'
+																			color='success'
+																		/>
+																	) : (
 																		<ArchiveOutlinedIcon
 																			fontSize='small'
 																			color='info'
 																		/>
-																	}
-																	checkedIcon={
-																		<UnarchiveIcon
-																			color='success'
-																			fontSize='small'
-																		/>
-																	}
-																/>
+																	)}
+																</IconButton>
 															</Tooltip>
+
 															<Tooltip title='Add task'>
 																<IconButton
 																	sx={{
@@ -489,10 +512,12 @@ const Kanban = (props: SectionInterface) => {
 																		'&:hover': { color: 'green' },
 																	}}
 																	onClick={() => handleCreateTask(section.id)}
+																	disabled={isLoading}
 																>
 																	<AddOutlinedIcon fontSize='small' />
 																</IconButton>
 															</Tooltip>
+
 															<Tooltip title='Delete section'>
 																<IconButton
 																	sx={{

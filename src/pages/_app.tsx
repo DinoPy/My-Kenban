@@ -127,6 +127,7 @@ const MyApp: AppType<{ session: Session | null }> = ({
 
 	useEffect(() => {
 		const themeToggle = localStorage.getItem('themeToggled');
+
 		if (themeToggle === null) {
 			localStorage.setItem('themeToggled', 'true');
 		} else {

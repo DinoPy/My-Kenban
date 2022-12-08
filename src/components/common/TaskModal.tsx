@@ -1,13 +1,11 @@
 import DeleteForever from '@mui/icons-material/DeleteForever';
 import CloseIcon from '@mui/icons-material/Close';
 import {
-	Backdrop,
 	Box,
 	Checkbox,
 	Divider,
 	Fade,
 	IconButton,
-	Modal,
 	Switch,
 	TextField,
 	Tooltip,
@@ -42,27 +40,34 @@ const modalStyle = {
 	position: 'absolute',
 	top: '50%',
 	left: '50%',
-	width: '50%',
 	transform: 'translate(-50%, -50%)',
-	bgcolor: 'background.paper',
+	width: '100%',
+	height: '100%',
+	backgroundColor: 'rgba(2,2,2,.5)',
 	// border: '0px solid #000',
 	boxShadow: 24,
 	p: 1,
-	height: '80%',
+	display: 'flex',
+	alignItems: 'center',
+	justifyContent: 'center',
 };
 
-const maximizedModalStyle = {
+const notMaximizedStyle = {
+	width: '70%',
+	height: '80%',
 	bgcolor: 'background.paper',
-	position: 'absolute',
+	p: 1,
+};
+const maximizedModalStyle = {
 	height: '96%',
-	boxShadow: 24,
-	width: `min(90vw, 1800px)`,
-	border: '2px solid #000',
-	padding: '1em',
+	// width: `min(90vw, 1800px)`,
+	width: '96%',
+	bgcolor: 'background.paper',
+	p: 1,
 };
 
 let timer: NodeJS.Timeout;
-const timeout = 500;
+const timeout = 1500;
 
 const TaskModal = (props: TaskModalInterface) => {
 	const taskDeleteMutation = trpc.task.delete.useMutation();
@@ -78,6 +83,8 @@ const TaskModal = (props: TaskModalInterface) => {
 		props.task?.content || ''
 	);
 
+	console.log(title);
+
 	useEffect(() => {
 		setTask(props.task);
 		setTitle(props.task !== undefined ? props.task.title : '');
@@ -86,6 +93,7 @@ const TaskModal = (props: TaskModalInterface) => {
 
 	const onClose = () => {
 		if (task !== undefined) {
+			console.log(title);
 			props.onUpdate({ ...task, title, content });
 		}
 		props.onClose();
@@ -135,6 +143,7 @@ const TaskModal = (props: TaskModalInterface) => {
 
 		try {
 			if (task !== undefined) {
+				props.onUpdate({ ...task, content: data, title: title });
 				timer = setTimeout(async () => {
 					await taskUpdateMutation.mutateAsync({
 						id: task?.id,
@@ -142,8 +151,6 @@ const TaskModal = (props: TaskModalInterface) => {
 						content: data,
 					});
 				}, timeout);
-
-				props.onUpdate({ ...task, content: data });
 			}
 		} catch (e) {
 			console.log(e);
@@ -159,126 +166,126 @@ const TaskModal = (props: TaskModalInterface) => {
 		}
 	};
 
-	const width = `${
-		props.dimensions.width >= 1800
-			? `${(props.dimensions.width - 1800) / 2}px`
-			: '5%'
-	}`;
-
 	return (
-		<Modal
-			open={task !== undefined}
-			closeAfterTransition
-			BackdropComponent={Backdrop}
-			BackdropProps={{ timeout: 500 }}
-			onClose={() => onClose()}
+		<div
+			onKeyDown={(e) => {
+				if (e.key === 'Escape') onClose();
+			}}
+
+			// open={task !== undefined}
+			// closeAfterTransition
+			// BackdropComponent={Backdrop}
+			// BackdropProps={{ timeout: 500 }}
+			// onClose={() => onClose()}
 		>
 			<Fade in={task !== undefined}>
-				<Box
-					sx={
-						isTaskModalMaximized
-							? {
-									...maximizedModalStyle,
-									transform: `translate(calc(${width}	), 3%)`,
-							  }
-							: modalStyle
-					}
-				>
+				<Box sx={modalStyle}>
 					<Box
-						sx={{
-							display: 'flex',
-							alignItems: 'center',
-							justifyContent: 'flex-end',
-							width: '100%',
-						}}
+						sx={
+							isTaskModalMaximized
+								? {
+										...maximizedModalStyle,
+										// transform: `translate(calc(${width}	), 3%)`,
+								  }
+								: { ...notMaximizedStyle }
+						}
 					>
-						<Box>
-							{props.dimensions.width > 600 && (
-								<Tooltip title='Toggle maximised window'>
-									<Switch
-										value={isTaskModalMaximized}
-										onChange={() => setIsTaskModalMaximized((prev) => !prev)}
-										defaultChecked={isTaskModalMaximized}
-									/>
-								</Tooltip>
-							)}
-
-							<Tooltip title='Archive board'>
-								<Checkbox
-									icon={<ArchiveOutlinedIcon color='info' />}
-									checkedIcon={<UnarchiveIcon color='success' />}
-									checked={task?.archived}
-									onChange={(e) => handleArchiveToggle(task?.archived)}
-								/>
-							</Tooltip>
-
-							<IconButton
-								color='error'
-								onClick={() =>
-									window.confirm(
-										'Are you sure you want to permanenly delete this task?'
-									) && onDeleteTask()
-								}
-								disabled={isDeleting}
-							>
-								<DeleteForever />
-							</IconButton>
-						</Box>
-						<Box sx={{ justifySelf: 'flex-start' }}>
-							<IconButton onClick={() => onClose()}>
-								<CloseIcon />
-							</IconButton>
-						</Box>
-					</Box>
-
-					<Box
-						sx={{
-							display: 'flex',
-							height: '100%',
-							flexDirection: 'column',
-							padding: isTaskModalMaximized
-								? '0rem .5rem 3rem'
-								: '2rem 3rem 3rem',
-						}}
-					>
-						<TextField
-							value={title}
-							onChange={(e) => onUpdateTitle(e)}
-							placeholder='Untitled'
-							variant='outlined'
-							sx={{
-								width: '100%',
-								'& .MuiOutlinedInput-input': { padding: 0 },
-								'& .MuiOutlinedInput-root': {
-									fontSize: '2.5rem',
-									fontWeight: 700,
-								},
-								'& .MuiOutlinedInput-notchedOutline': {
-									border: 'unset',
-								},
-								marginBottom: '10px',
-							}}
-						/>
-						<Typography variant='body2' fontWeight='700'>
-							{task !== undefined
-								? Moment(task.createdAt).format('DD/MM/YYYY')
-								: ''}
-						</Typography>
-						<Divider sx={{ my: 3 }} />
 						<Box
 							sx={{
-								height: '100%',
-								border: '1px #252525 solid',
-								overflowX: 'hidden',
-								overflowY: 'hidden',
+								display: 'flex',
+								alignItems: 'center',
+								justifyContent: 'flex-end',
+								width: '100%',
 							}}
 						>
-							<CKEditor content={content} onUpdateContent={onUpdateContent} />
+							<Box>
+								{props.dimensions.width > 600 && (
+									<Tooltip title='Toggle maximised window'>
+										<Switch
+											value={isTaskModalMaximized}
+											onChange={() => setIsTaskModalMaximized((prev) => !prev)}
+											defaultChecked={isTaskModalMaximized}
+										/>
+									</Tooltip>
+								)}
+
+								<Tooltip title='Archive board'>
+									<Checkbox
+										icon={<ArchiveOutlinedIcon color='info' />}
+										checkedIcon={<UnarchiveIcon color='success' />}
+										checked={task?.archived}
+										onChange={() => handleArchiveToggle(task?.archived)}
+									/>
+								</Tooltip>
+
+								<IconButton
+									color='error'
+									onClick={() =>
+										window.confirm(
+											'Are you sure you want to permanenly delete this task?'
+										) && onDeleteTask()
+									}
+									disabled={isDeleting}
+								>
+									<DeleteForever />
+								</IconButton>
+							</Box>
+							<Box sx={{ justifySelf: 'flex-start' }}>
+								<IconButton onClick={() => onClose()}>
+									<CloseIcon />
+								</IconButton>
+							</Box>
+						</Box>
+
+						<Box
+							sx={{
+								display: 'flex',
+								height: '100%',
+								flexDirection: 'column',
+								padding: isTaskModalMaximized
+									? '0rem .5rem 3rem'
+									: '1em 1em 3em',
+							}}
+						>
+							<TextField
+								value={title}
+								onChange={(e) => onUpdateTitle(e)}
+								placeholder='Untitled'
+								variant='outlined'
+								sx={{
+									width: '100%',
+									'& .MuiOutlinedInput-input': { padding: 0 },
+									'& .MuiOutlinedInput-root': {
+										fontSize: '2.5rem',
+										fontWeight: 700,
+									},
+									'& .MuiOutlinedInput-notchedOutline': {
+										border: 'unset',
+									},
+									marginBottom: '10px',
+								}}
+							/>
+							<Typography variant='body2' fontWeight='700'>
+								{task !== undefined
+									? Moment(task.createdAt).format('DD/MM/YYYY')
+									: ''}
+							</Typography>
+							<Divider sx={{ my: 3 }} />
+							<Box
+								sx={{
+									height: '100%',
+									border: '1px #252525 solid',
+									overflowX: 'hidden',
+									overflowY: 'hidden',
+								}}
+							>
+								<CKEditor content={content} onUpdateContent={onUpdateContent} />
+							</Box>
 						</Box>
 					</Box>
 				</Box>
 			</Fade>
-		</Modal>
+		</div>
 	);
 };
 

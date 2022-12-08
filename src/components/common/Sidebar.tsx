@@ -176,7 +176,7 @@ const Sidebar = () => {
 		const { data, isFetched } = await refetch();
 		if (isFetched && data && data.boards?.length > 0) {
 			dispatch(setBoards(data.boards));
-			dispatch(setActiveBoard(data.boards[0]?.id));
+			if (activeBoard === '') dispatch(setActiveBoard(data.boards[0]?.id));
 			dispatch(
 				setFavoritedBoards(
 					data.boards
@@ -349,7 +349,12 @@ const Sidebar = () => {
 			{dimensions.width < 600 && (
 				<IconButton
 					onClick={() => setSideBarOpen(true)}
-					sx={{ position: 'absolute', bottom: '5px', right: '5px' }}
+					sx={{
+						position: 'absolute',
+						bottom: '5px',
+						right: '5px',
+					}}
+					color='primary'
 				>
 					<MenuIcon />
 				</IconButton>
@@ -362,11 +367,16 @@ const Sidebar = () => {
 				onClose={() => setSideBarOpen(false)}
 				sx={{
 					width: sidebarWidth,
-					height: '100vh',
+					height: 'min(100vh, 100%)',
 					'& > div': {
 						borderRight: 'none',
 					},
-					boxShadow: dimensions.width > 600 ? 4 : 0,
+					zIndex: 0,
+				}}
+				PaperProps={{
+					sx: {
+						boxShadow: 4,
+					},
 				}}
 			>
 				<List
@@ -586,11 +596,11 @@ const Sidebar = () => {
 																											? 'grab'
 																											: 'pointer!important',
 																									}}
-																									onClick={() =>
+																									onClick={() => {
 																										dispatch(
 																											setActiveBoard(item.id)
-																										)
-																									}
+																										);
+																									}}
 																								>
 																									<Typography
 																										variant='body2'
