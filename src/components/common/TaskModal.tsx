@@ -83,8 +83,6 @@ const TaskModal = (props: TaskModalInterface) => {
 		props.task?.content || ''
 	);
 
-	console.log(title);
-
 	useEffect(() => {
 		setTask(props.task);
 		setTitle(props.task !== undefined ? props.task.title : '');
