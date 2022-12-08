@@ -47,6 +47,10 @@ const Home: NextPage<{
 		}
 	};
 
+	React.useEffect(() => {
+		dispatch(setActiveBoard(localStorage.getItem('activeBoard')));
+	}, []);
+
 	return (
 		<AppLayout>
 			{boards?.length < 1 && folders?.length < 1 ? (

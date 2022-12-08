@@ -84,6 +84,7 @@ const Board = ({
 	const { data: session } = useSession();
 	const dispatch = useAppDispatch();
 	const activeBoard = useAppSelector((state) => state.activeBoard.value);
+	console.log(activeBoard);
 	const boards = useAppSelector((state) => state.board.value);
 	const folders = useAppSelector((state) => state.folders.value);
 	const favoritedBoards = useAppSelector(

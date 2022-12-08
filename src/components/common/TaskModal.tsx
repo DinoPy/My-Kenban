@@ -83,24 +83,17 @@ const TaskModal = (props: TaskModalInterface) => {
 		props.task?.content || ''
 	);
 
+	console.log(title);
+
 	useEffect(() => {
 		setTask(props.task);
 		setTitle(props.task !== undefined ? props.task.title : '');
 		setContent(props.task !== undefined ? props.task.content : '');
 	}, [props.task]);
 
-	useEffect(() => {
-		const cbFunct = (e: KeyboardEvent) => {
-			if (e.key === 'Escape') onClose();
-		};
-		window.addEventListener('keydown', cbFunct);
-		return () => {
-			window.removeEventListener('keydown', cbFunct);
-		};
-	}, []);
-
 	const onClose = () => {
 		if (task !== undefined) {
+			console.log(title);
 			props.onUpdate({ ...task, title, content });
 		}
 		props.onClose();
@@ -150,7 +143,7 @@ const TaskModal = (props: TaskModalInterface) => {
 
 		try {
 			if (task !== undefined) {
-				props.onUpdate({ ...task, content: data });
+				props.onUpdate({ ...task, content: data, title: title });
 				timer = setTimeout(async () => {
 					await taskUpdateMutation.mutateAsync({
 						id: task?.id,
@@ -173,20 +166,17 @@ const TaskModal = (props: TaskModalInterface) => {
 		}
 	};
 
-	const width = `${
-		props.dimensions.width >= 1800
-			? `${(props.dimensions.width - 1800) / 2}px`
-			: '5%'
-	}`;
-
 	return (
 		<div
+			onKeyDown={(e) => {
+				if (e.key === 'Escape') onClose();
+			}}
 
-		// open={task !== undefined}
-		// closeAfterTransition
-		// BackdropComponent={Backdrop}
-		// BackdropProps={{ timeout: 500 }}
-		// onClose={() => onClose()}
+			// open={task !== undefined}
+			// closeAfterTransition
+			// BackdropComponent={Backdrop}
+			// BackdropProps={{ timeout: 500 }}
+			// onClose={() => onClose()}
 		>
 			<Fade in={task !== undefined}>
 				<Box sx={modalStyle}>
@@ -224,7 +214,7 @@ const TaskModal = (props: TaskModalInterface) => {
 										icon={<ArchiveOutlinedIcon color='info' />}
 										checkedIcon={<UnarchiveIcon color='success' />}
 										checked={task?.archived}
-										onChange={(e) => handleArchiveToggle(task?.archived)}
+										onChange={() => handleArchiveToggle(task?.archived)}
 									/>
 								</Tooltip>
 

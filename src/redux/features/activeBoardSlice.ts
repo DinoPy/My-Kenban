@@ -1,5 +1,7 @@
 import { createSlice } from '@reduxjs/toolkit';
 
+// const savedBoard = localStorage.getItem('activeBoard') || '';
+
 const initialState = { value: '' };
 
 export const activeBoardSlice = createSlice({
@@ -7,6 +9,7 @@ export const activeBoardSlice = createSlice({
 	initialState,
 	reducers: {
 		setActiveBoard: (state, action) => {
+			localStorage.setItem('activeBoard', action.payload);
 			state.value = action.payload;
 		},
 	},

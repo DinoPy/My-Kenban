@@ -363,7 +363,7 @@ const Kanban = (props: SectionInterface) => {
 		return () => {
 			window.removeEventListener('resize', effectCB);
 		};
-	});
+	}, []);
 
 	return (
 		<>
