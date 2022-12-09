@@ -48,8 +48,9 @@ const Home: NextPage<{
 	};
 
 	React.useEffect(() => {
-		dispatch(setActiveBoard(localStorage.getItem('activeBoard')));
-	}, []);
+		const savedBoard = localStorage.getItem('activeBoard');
+		if (savedBoard) dispatch(setActiveBoard(savedBoard));
+	}, [dispatch]);
 
 	return (
 		<AppLayout>
